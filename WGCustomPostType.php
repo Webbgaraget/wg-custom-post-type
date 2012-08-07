@@ -1,7 +1,6 @@
 <?php
-
 /**
- * A class simplifying the creation of Custom Post Types in WordPress
+ * A class simplifying the creation of usable Custom Post Types in WordPress
  *
  * This class provides a simpler interface for commonly used (and less
  * commonly but pretty sweet) features when creating custom post types
@@ -9,6 +8,7 @@
  *
  * @author Webbgaraget
  * @link http://www.webbgaraget.se
+ * @uses wg-meta-box (http://webbgaraget.github.com/wg-meta-box/)
  */
 class WGCustomPostType
 {
@@ -122,8 +122,12 @@ class WGCustomPostType
      */
     public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default' )
     {
-        // (waiting for inital commit for WGMetaBox)
-        // WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority );
+        if ( ! class_exists( 'WGMetaBox' ) )
+        {
+            throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
+        }
+        
+        WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority );
         
         return $this;
     }
