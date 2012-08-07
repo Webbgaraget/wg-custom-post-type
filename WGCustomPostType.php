@@ -169,7 +169,9 @@ class WGCustomPostType
     
     /**
      * Adds a help tab to the screens for this CPT.
-     * For information on the $tab argument, see documentation for WP_Screen::add_help_tab()
+     * For information on the $tab argument, see documentation for WP_Screen::add_help_tab():
+     * http://codex.wordpress.org/Function_Reference/add_help_tab
+     *
      * @param array $tab Settings for the tab 
      * @return $this For chaining
      */
@@ -177,14 +179,30 @@ class WGCustomPostType
     {
         if ( is_null( $this->_help_tabs ) )
         {
-            // Hook up our callback
             add_action( "load-{$GLOBALS['pagenow']}", array( &$this, '_cb_add_help_to_screen' ), 10, 3 );
             
             $this->_help_tabs = array();
         }
         
-        // Save tab for later when the callback is called
         $this->_help_tabs[] = $tab;
+        
+        return $this;
+    }
+    
+    /**
+     * Sets the content for the help sidebar for this CPT
+     *
+     * @param string $content HTML markup for the help sidebar
+     * @return $this For chaining
+     */
+    public function set_help_sidebar( $content )
+    {
+        if ( is_null( $this->_help_sidebar ) )
+        {
+            add_action( "load-{$GLOBALS['pagenow']}", array( &$this, '_cb_add_help_to_screen' ), 10, 3 );
+        }
+        
+        $this->_help_sidebar = $content;
         
         return $this;
     }
@@ -198,8 +216,10 @@ class WGCustomPostType
      */
     public function set_title_placeholder( $placeholder )
     {
-        // Hook up our callback
-        add_filter( 'enter_title_here', array( &$this, '_cb_filter_title_placeholder' ) );
+        if ( is_null( $this->_title_placeholder ) )
+        {
+            add_filter( 'enter_title_here', array( &$this, '_cb_filter_title_placeholder' ) );
+        }
 
         $this->_title_placeholder = $placeholder;
         
@@ -321,7 +341,7 @@ class WGCustomPostType
     }
     
     /**
-     * Action callback for adding help tabs.
+     * Action callback for adding help tabs and help sidebar.
      * Called at: "load-{$GLOBALS['pagenow']}"
      */
     public function _cb_add_help_to_screen()
@@ -332,9 +352,17 @@ class WGCustomPostType
             return;
         }
         
-        foreach ( $this->_help_tabs as $tab )
+        if ( is_array( $this->_help_tabs ) )
         {
-            $screen->add_help_tab( $tab );
+            foreach ( $this->_help_tabs as $tab )
+            {
+                $screen->add_help_tab( $tab );
+            }
+        }
+        
+        if ( ! is_null( $this->_help_sidebar ) )
+        {
+            $screen->set_help_sidebar( $this->_help_sidebar );
         }
     }
     
