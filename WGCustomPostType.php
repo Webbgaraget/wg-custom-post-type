@@ -61,6 +61,22 @@ class WGCustomPostType
     );
     
     /**
+     * URL to the menu icon
+     * @var string
+     */
+    protected $_menu_icon;
+
+    /**
+     * URL to the screen icon
+     * @var string
+     */
+    protected $_screen_icon;
+
+
+/************************************************
+ * Publicly available interface
+ ************************************************/
+    /**
      * Creates the custom post type (CPT)
      *
      * @param string $post_type Internal ID of the CPT
@@ -71,6 +87,7 @@ class WGCustomPostType
     {
         if ( is_array( $args ) && $require_labels )
         {
+            // Check if all the required labels are set in the arguments
             foreach ( $this->_required_labels as $label )
             {
                 if ( ! isset( $args['labels'][$label] ) )
@@ -78,7 +95,6 @@ class WGCustomPostType
                     throw new Exception( __CLASS__ . ': Required label "' . $label . '" not set for CPT "' . $post_type . '". Args: ' . print_r( $args, true ) );
                 }
             }
-            
         }
         
         $this->post_type      = $post_type;
@@ -87,10 +103,6 @@ class WGCustomPostType
         add_action( 'init', array( &$this, '_cb_init' ) );
     }
 
-
-/************************************************
- * Publicly available interface
- ************************************************/
     /**
      * Adds a new taxonomy and associates it with the CPT.
      *
@@ -194,6 +206,45 @@ class WGCustomPostType
         return $this;
     }
     
+    /**
+     * Sets the menu icon for this CPT.
+     * This method expects an icon sprite as described by Randy Jensen here:
+     * http://randyjensenonline.com/thoughts/wordpress-custom-post-type-fugue-icons/
+     *
+     * @param string $icon_url
+     * @return $this For chaining
+     */
+    public function set_menu_icon( $icon_url )
+    {
+        if ( is_null( $this->_menu_icon ) && is_null( $this->_screen_icon ) )
+        {
+            add_action( 'admin_head', array( &$this, '_cb_admin_head' ) );
+        }
+        
+        $this->_menu_icon = $icon_url;
+        
+        return $this;
+    }
+    
+    /**
+     * Sets the screen icon for this CPT.
+     *
+     * @param string $icon_url
+     * @return $this For chaining
+     */
+    public function set_screen_icon( $icon_url )
+    {
+        if ( is_null( $this->_menu_icon ) && is_null( $this->_screen_icon ) )
+        {
+            add_action( 'admin_head', array( &$this, '_cb_admin_head' ) );
+        }
+        
+        $this->_screen_icon = $icon_url;
+        
+        return $this;
+    }
+    
+    
 /************************************************
  * Callbacks called by WP hooks
  ************************************************/
@@ -221,11 +272,41 @@ class WGCustomPostType
     }
     
     /**
+     * Action callback for outputting custom CSS to the admin area
+     * Called at: "admin_head"
+     */
+    public function _cb_admin_head()
+    {
+        if ( is_null( $this->_menu_icon ) && is_null( $this->_screen_icon ) )
+        {
+            // No icons are set, no need to output CSS
+            return;
+        }
+        
+        echo '<style type="text/css" media="screen">';
+        
+        if ( ! is_null( $this->_menu_icon ) )
+        {
+            // Let's be specific so the original CSS is overridden
+            echo "#wpwrap #adminmenuwrap #adminmenu #menu-posts-{$this->post_type} .wp-menu-image { background: url({$this->_menu_icon}) no-repeat 6px -17px; } ";
+            echo "#wpwrap #adminmenuwrap #adminmenu #menu-posts-{$this->post_type}:hover .wp-menu-image,";
+            echo "#wpwrap #adminmenuwrap #adminmenu #menu-posts-{$this->post_type}.wp-has-current-submenu .wp-menu-image { background-position:6px 7px; } ";
+        }
+
+        if ( ! is_null( $this->_screen_icon ) )
+        {
+            echo "#wpwrap #wpbody-content #icon-edit.icon32.icon32-posts-{$this->post_type} { background: url({$this->_screen_icon}) no-repeat; } ";
+        }
+        
+        echo '</style>';
+    }
+    
+    /**
      * Filter callback for setting the "Enter title here" placeholder
      * Called at: "enter_title_here"
      *
      * @param $title The title placeholder before our filter
-     * @return The filteret title placeholder
+     * @return The filtered title placeholder
      */
     public function _cb_filter_title_placeholder( $title )
     {
