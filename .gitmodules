@@ -1,0 +1,3 @@
+[submodule "lib/WGMetaBox"]
+	path = lib/WGMetaBox
+	url = git@github.com:Webbgaraget/wg-meta-box
