@@ -124,7 +124,14 @@ class WGCustomPostType
     {
         if ( ! class_exists( 'WGMetaBox' ) )
         {
-            throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
+            if ( file_exists( dirname( __FILE__ ) . '/lib/WGMetaBox/WGMetaBox.php' ) )
+            {
+                require_once( dirname( __FILE__ ) . '/lib/WGMetaBox/WGMetaBox.php' );
+            }
+            else
+            {
+                throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
+            }
         }
         
         WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority );
