@@ -151,6 +151,30 @@ class WGCustomPostType
         return $this;
     }
     
+    /**
+     * Adds an additional "featured image" using the plugin
+     * Multiple Post Thumbnails (http://wordpress.org/extend/plugins/multiple-post-thumbnails/)
+     * @param string $id 
+     * @param string $label 
+     */
+    public function add_featured_image( $id, $label )
+    {
+        if ( ! class_exists( 'MultiPostThumbnails' ) )
+        {
+            return;
+        }
+        
+        new MultiPostThumbnails(
+            array(
+                'id'        => $id,
+                'label'     => $label,
+                'post_type' => $this->post_type,
+            )
+        );
+        
+        return $this;
+    }
+    
     /** 
      * Adds multiple help tabs to the screens for this CPT.
      * @param array $tabs The tabs to add
