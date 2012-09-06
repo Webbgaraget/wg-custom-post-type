@@ -294,7 +294,7 @@ class WGCustomPostType
  ************************************************/
     /**
      * Action callback for registering the CPT with given name and options
-     * Called at: "init"
+     * Action: "init"
      */
     public function _cb_init()
     {
@@ -317,7 +317,7 @@ class WGCustomPostType
     
     /**
      * Action callback for outputting custom CSS to the admin area
-     * Called at: "admin_head"
+     * Action: "admin_head"
      */
     public function _cb_admin_head()
     {
@@ -347,7 +347,7 @@ class WGCustomPostType
     
     /**
      * Filter callback for setting the "Enter title here" placeholder
-     * Called at: "enter_title_here"
+     * Filter: "enter_title_here"
      *
      * @param $title The title placeholder before our filter
      * @return The filtered title placeholder
@@ -366,7 +366,7 @@ class WGCustomPostType
     
     /**
      * Action callback for adding help tabs and help sidebar.
-     * Called at: "load-{$GLOBALS['pagenow']}"
+     * Action: "load-{$GLOBALS['pagenow']}"
      */
     public function _cb_add_help_to_screen()
     {
