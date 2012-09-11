@@ -152,12 +152,18 @@ class WGCustomPostType
     }
     
     /**
-     * Adds an additional "featured image" using the plugin
-     * Multiple Post Thumbnails (http://wordpress.org/extend/plugins/multiple-post-thumbnails/)
-     * @param string $id 
-     * @param string $label 
+     * Adds an additional "featured image" using the plugin Multiple Post Thumbnails
+     * (http://wordpress.org/extend/plugins/multiple-post-thumbnails/)
+     *
+     * The (optional) $size_attr-array should, if given, have three or four elements
+     * corresponding to the arguments expected by WordPress' add_image_size():
+     * http://codex.wordpress.org/Function_Reference/add_image_size
+     * 
+     * @param string $id Internal ID of the image
+     * @param string $label Label to be displayed in the admin area
+     * @param array $size_attr Attributes for a thumbnail size to be registered. [optional]
      */
-    public function add_featured_image( $id, $label )
+    public function add_featured_image( $id, $label, array $size_attr = null )
     {
         if ( ! class_exists( 'MultiPostThumbnails' ) )
         {
@@ -171,6 +177,18 @@ class WGCustomPostType
                 'post_type' => $this->post_type,
             )
         );
+        
+        if ( is_array( $size_attr ) )
+        {
+            if ( 3 == count( $size_attr ) )
+            {
+                add_image_size( $size_attr[0], $size_attr[1], $size_attr[2] );
+            }
+            elseif ( 4 == count( $size_attr ) )
+            {
+                add_image_size( $size_attr[0], $size_attr[1], $size_attr[2], $size_attr[3] );
+            }
+        }
         
         return $this;
     }
