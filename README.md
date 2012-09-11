@@ -1,24 +1,23 @@
-WG Custom Post Type
-================
+# WG Custom Post Type
+_…or: How I Learned to Stop Worrying and Love the Custom Post Type_
 
-`WG_Custom_Post_Type` is a library created to simplify common tasks when creating Custom Post Types (CPT:s) for WordPress.
+`WG_Custom_Post_Type` is a library created to simplify common tasks when developing Custom Post Types (CPT:s) for WordPress.
 
 Along with the basic functions for creating the CPT:s and adding taxonomies and meta boxes, you are
-handed some convenience methods for playing with hygiene factors such as menu icons and help tabs.
+handed some convenience methods for playing with hygiene factors at the wp-admin side such as menu icons and help tabs.
 
-## Why you'll learn to love `WG_Custom_Post_Type`
 
 1. Speed up your WordPress CPT development with a simplified interface
 1. Say goodbye to all those action and filter callbacks that uglifies your code
 1. Make the administration more user friendly with icons and help tabs
 1. Enjoy a chained interface
 
-## Keepin' it WP yo
+### Keepin' it WP yo
 
 While trying to make the interface as easy as possible for the developer, our aim is to still keep as close to the WordPress
 way of doing things as possible. Why you ask? Simple: It's WordPress you walk, and WordPress you shall talk.
 
-## Dependencies
+### Dependencies
 
 * The library [wg-meta-box](http://github.com/webbgaraget/wg-meta-box "wg-meta-box @ Github") is used for adding meta boxes. `wg-meta-box`
 is added as a submodule to this repository, see below on how to initialize it.
@@ -26,8 +25,9 @@ is added as a submodule to this repository, see below on how to initialize it.
 * The plugin [Multiple Post Thumbnails](http://wordpress.org/extend/plugins/multiple-post-thumbnails/) is used for adding multiple featured images. You
 need to install and activate the plugin in order to use this functionality.
 
+***
 
-# Getting started
+## Getting started
 
 To get started using this library, go ahead and clone the repo into the folder of choice.
 
@@ -82,7 +82,9 @@ This is a simple example on how to create a CPT for Events:
 	
 Note how the labels and options arrays are identical to the ones you usually pass to `register_post_type()`.
 
-# Documentation
+***
+
+## Method documentation
 
 	public function __construct( $post_type, $args = null, $label_check = 'require_labels' ) {}
 
@@ -92,14 +94,15 @@ Lorem
 
 Ipsum
 
+*** 
 
-# Changelog
+## Changelog
 
 ### 2012-09-12 v0.1 alpha release
 * This document was created
 * The library was modified to adhere more closely (but not fully) to WordPress Coding Standards
 
-# License (MIT)
+## License (MIT)
 
 Copyright (c) 2012 Webbgaraget AB http://www.webbgaraget.se/
 
