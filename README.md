@@ -25,7 +25,6 @@ is added as a submodule to this repository, see below on how to initialize it.
 * The plugin [Multiple Post Thumbnails](http://wordpress.org/extend/plugins/multiple-post-thumbnails/) is used for adding multiple featured images. You
 need to install and activate the plugin in order to use this functionality.
 
-***
 
 ## Getting started
 
@@ -82,8 +81,6 @@ This is a simple example on how to create a CPT for Events:
 	
 Note how the labels and options arrays are identical to the ones you usually pass to `register_post_type()`.
 
-***
-
 ## Method documentation
 
 	public function __construct( $post_type, $args = null, $label_check = 'require_labels' ) {}
@@ -93,8 +90,6 @@ Lorem
 	public function add_taxonomy( $id, $args = array() ) {}
 
 Ipsum
-
-*** 
 
 ## Changelog
 
