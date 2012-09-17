@@ -12,8 +12,6 @@ handed some convenience methods for playing with hygiene factors at the wp-admin
 1. Make the administration more user friendly with icons and help tabs
 1. Enjoy a chained interface
 
-### Keepin' it WP yo
-
 While trying to make the interface as easy as possible for the developer, our aim is to still keep as close to the WordPress
 way of doing things as possible. Why you ask? Simple: It's WordPress you walk, and WordPress you shall talk.
 
@@ -28,15 +26,21 @@ need to install and activate the plugin in order to use this functionality.
 
 ## Getting started
 
-To get started using this library, go ahead and clone the repo into the folder of choice.
+To get started using this library, either clone it or download the zip and unpack it into the folder of choice.
+A recommended place would be to put the library in a `lib/`-folder within your theme or plugin.
 
-	git clone git@github.com:Webbgaraget/wg-custom-post-type
+### Using `git clone`
+
+	git clone git@github.com:Webbgaraget/wg-custom-post-type.git
 
 If you're interested in adding meta boxes for your CPT (you probably are), initialise the submodule with the following command (ran from the root of the newly cloned git repo)
 
 	git submodule update --init
 
-And you're golden!
+### Using the zip file
+
+Unpack the zip file where you want the library to reside. Then head on over to [wg-meta-box](http://github.com/webbgaraget/wg-meta-box "wg-meta-box @ Github") and download
+and unpack that library into the `wg-custom-post-type/lib/wg-meta-box` folder.
 
 ## Example: Creating your first custom post type
 
@@ -81,15 +85,23 @@ This is a simple example on how to create a CPT for Events:
 	
 Note how the labels and options arrays are identical to the ones you usually pass to `register_post_type()`.
 
-## Method documentation
+## The Basics
 
-	public function __construct( $post_type, $args = null, $label_check = 'require_labels' ) {}
+* `__construct`
+* `add_taxonomy`
+* `add_meta_box`
+* `add_featured_image`
 
-Lorem
+## Customizing the admin screen
 
-	public function add_taxonomy( $id, $args = array() ) {}
+* `set_title_placeholder`
+* `set_menu_icon`
+* `set_screen_icon`
 
-Ipsum
+## Help tabs
+* `add_help_tab`
+* `add_help_tabs`
+* `set_help_sidebar`
 
 ## Changelog
 
