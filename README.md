@@ -46,7 +46,7 @@ and unpack that library into the `wg-custom-post-type/lib/wg-meta-box` folder.
 
 This is a simple example on how to create a CPT for Events:
 
-	// Labels
+	// Post type labels
 	$labels = array(
 		'name'               => 'Events',
 		'singular_name'      => 'Event',
@@ -68,11 +68,19 @@ This is a simple example on how to create a CPT for Events:
 		'hierarchial'     => true,
 		'supports'        => array( 'title' ),
 	) );
-	
-	// Create a meta box and set a placeholder text to the title field on the edit screen
+
+	// Create a taxonomy for event types and a meta box for event information
 	$event
-		->set_title_placeholder( 'Enter event title here!' )
-		->add_meta_box( 'event_info', 'Event information', array(
+		->add_taxonomy( 'event-type', array(
+			'labels' => array(
+				'name'          => 'Event types',
+				'singular_name' => 'Event type',
+				'add_new_item'  => 'Add new type',
+				'edit_item'     => 'Edit type',
+				'update_item'   => 'Update type',
+			)
+		) )
+		->add_meta_box( 'event-info', 'Event information', array(
 			'date' => array(
 		        'type'  => 'date',
 		        'label' => 'Date',
@@ -83,14 +91,63 @@ This is a simple example on how to create a CPT for Events:
 		    )
 		) );
 	
-Note how the labels and options arrays are identical to the ones you usually pass to `register_post_type()`.
+Note how the labels and options arrays passed to `wg-custom-post-type` are identical to the ones you usually pass to `register_post_type()`.
 
 ## The Basics
 
-* `__construct`
-* `add_taxonomy`
-* `add_meta_box`
-* `add_featured_image`
+### Constructor
+	__construct( $post_type, $args, $label_check = 'require_labels' )
+
+* **$post\_type** – Name of the post type. _(string, required)_
+
+* **$args** – Options array as expected by WP:s [register\_post\_type()](http://codex.wordpress.org/Function_Reference/register_post_type) _(array, required)_
+
+* **$label\_check** – Flag deciding whether the `labels` option should be checked for required labels. _(string, optional, default: 'require\_labels')_
+
+
+Creates a new custom post type with the given name $post_type and the given arguments $argts.
+The library by default checks the given $args array to see that all basic post type labels are set.
+To disable this check, pass 'disabled' as the third parameter.
+
+*Return*: null
+
+### Taxonomy 
+
+	add_taxonomy( $id, $args )
+	
+* **$id** – Internal ID of the taxonomy. _(string, required)_
+
+* **$args** – Options for the taxonomy as expected in the third argument of WP:s [register\_taxonomy()](http://codex.wordpress.org/Function_Reference/register_post_type) _(array, required)_
+
+Adds a taxonomy to the post type.
+
+*Return*: **$this** – For chaining.
+	
+### Meta box
+
+	add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default' )
+
+This method uses the method `WGMetaBox::add_meta_box()` to create the meta box.
+See information about the arguments in the documentation for [wg-meta-box](http://github.com/webbgaraget/wg-meta-box "wg-meta-box @ Github").
+
+Return: **$this** – For chaining.
+
+### Additional featured images
+
+	add_featured_image( $id, $label, array $size_attr = null )
+
+* **$id** – Internal ID of the image _(string, required)_
+
+* **$label** – Label to be displayed in the admin area _(string, required)_
+
+* **$size\_attr** – Optional array of attributes for a thumbnail size to be registered. See above for info. _(array, optional, default: null)_
+
+Adds an additional "featured image" using the plugin [Multiple Post Thumbnails](http://wordpress.org/extend/plugins/multiple-post-thumbnails/).
+
+The (optional) $size_attr-array should, if given, have three or four elements
+corresponding to the arguments expected by WP:s [add\_image\_size()](http://codex.wordpress.org/Function_Reference/add_image_size).
+
+Return: **$this** – For chaining.
 
 ## Customizing the admin screen
 

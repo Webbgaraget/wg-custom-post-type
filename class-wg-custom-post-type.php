@@ -83,7 +83,7 @@ class WG_Custom_Post_Type
 	 * @param array $args Options as expected by WP:s register_post_type()
 	 * @param string $label_check Optional flag to check if required labels are set in the $args['labels'] array. Default: require_labels
 	 */
-	public function __construct( $post_type, $args = null, $label_check = 'require_labels' )
+	public function __construct( $post_type, $args, $label_check = 'require_labels' )
 	{
 		if ( is_array( $args ) && 'require_labels' == $label_check )
 		{
@@ -107,10 +107,10 @@ class WG_Custom_Post_Type
 	 * Adds a new taxonomy and associates it with the CPT.
 	 *
 	 * @param string $id Internal ID of the taxonomy
-	 * @param array $args Options for the taxonomy as expected by WP:s register_taxonomy()
+	 * @param array $args Options for the taxonomy as expected in the third argument of WP:s register_taxonomy()
 	 * @return $this For chaining
 	 */
-	public function add_taxonomy( $id, $args = array() )
+	public function add_taxonomy( $id, $args )
 	{
 		// Save taxonomy for later when the init callback is called
 		$this->_taxonomies[] = array(
@@ -124,7 +124,7 @@ class WG_Custom_Post_Type
 	/**
 	 * Adds a new meta box for the CPT using WGMetaBox::add_meta_box()
 	 *
-	 * @param string $id Internal ID of the taxonomy
+	 * @param string $id Internal ID of the meta box
 	 * @param string $title The title displayed in the meta box header
 	 * @param array $fields Array of fields defined as described in WGMetaBox
 	 * @param string $context Optional context of the meta box. Default: 'advanced'
