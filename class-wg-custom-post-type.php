@@ -108,15 +108,53 @@ class WG_Custom_Post_Type
 	 *
 	 * @param string $id Internal ID of the taxonomy
 	 * @param array $args Options for the taxonomy as expected in the third argument of WP:s register_taxonomy()
+	 * @param boolean|array $admin_column Optional options for displaying the taxonomy terms as a column list of posts for this CPT.
 	 * @return $this For chaining
 	 */
-	public function add_taxonomy( $id, $args )
+	public function add_taxonomy( $id, $args, $admin_column = null )
 	{
 		// Save taxonomy for later when the init callback is called
 		$this->_taxonomies[] = array(
-			'slug' => $id,
-			'args' => $args,
+			'slug'         => $id,
+			'args'         => $args,
 		);
+		
+		if ( is_array( $admin_column ) || true === $admin_column )
+		{
+			// Set the taxonomy label as default label for the admin column
+			$taxonomy_label = ( isset( $args['label'] ) ? $args['label'] : $args['labels']['name'] );
+			
+			// Display the admin column after the post title
+			// and make it sortable by default
+			$default_admin_column = array(
+				'display_after' => 'title',
+				'label'         => $taxonomy_label,
+				'sortable'      => true,
+			);
+			
+			if ( true === $admin_column )
+			{
+				// Use the default values
+				$admin_column = $default_admin_column;
+			}
+			else
+			{
+				$admin_column = array_merge( $default_admin_column, $admin_column );
+			}
+			
+			if ( ! is_array( $this->admin_columns ) )
+			{
+				$this->admin_columns = array();
+				
+				// Add columns to the admin screen
+				add_filter( "manage_{$this->post_type}_posts_columns", array( &$this, '_cb_register_columns' ) );
+				add_filter( "manage_edit-{$this->post_type}_sortable_columns", array( &$this, '_cb_sortable_columns' ) );
+				add_action( "manage_{$this->post_type}_posts_custom_column", array( &$this, '_cb_display_column_values' ), 10, 2 );
+				add_filter( 'posts_clauses', array( &$this, '_cb_orderby_column' ), 10, 2 );
+			}
+			
+			$this->admin_columns[ $id ] = $admin_column;
+		}
 
 		return $this;
 	}
@@ -327,7 +365,7 @@ class WG_Custom_Post_Type
 
 		register_post_type( $this->post_type, $args );
 
-		// Register any taxonomies associated with the CPT
+		// Register any taxonomies associated to this CPT
 		foreach ( $this->_taxonomies as $taxonomy )
 		{
 			register_taxonomy( $taxonomy['slug'], $this->post_type, $taxonomy['args'] );
@@ -407,5 +445,89 @@ class WG_Custom_Post_Type
 		{
 			$screen->set_help_sidebar( $this->_help_sidebar );
 		}
+	}
+	
+	/**
+	 * Adds columns to the admin screen for this post type
+	 * Action: "manage_{$this->post_type}_posts_columns"
+	 * 
+	 * @param array $post_columns
+	 * @return array
+	 */
+	public function _cb_register_columns( $post_columns )
+	{
+		foreach ( $this->admin_columns as $taxonomy_id => $admin_column )
+		{
+			$index = array_search( $admin_column['display_after'], array_keys( $post_columns ) ) + 1;
+			$new_columns = array_slice( $post_columns, 0, $index );
+			$new_columns[ $taxonomy_id ] = $admin_column['label'];
+			$new_columns = array_merge( $new_columns, array_slice( $post_columns, $index ) );
+			
+			$post_columns = $new_columns;
+		}
+		return $post_columns;
+	}
+	
+	public function _cb_sortable_columns( $columns )
+	{
+		foreach ( $this->admin_columns as $taxonomy_id => $admin_column )
+		{
+			if ( true === $admin_column['sortable'] )
+			{
+				$columns[ $taxonomy_id ] = $taxonomy_id;
+			}
+		}
+		
+		return $columns;
+	}
+	
+	/**
+	 * Outputs the value for the columns we have added to the admin screen
+	 * Action: manage_{$this->post_type}_custom_column
+	 *
+	 * @param string $column_name 
+	 */
+	public function _cb_display_column_values( $column_name, $post_id )
+	{
+		foreach ( $this->admin_columns as $taxonomy_id => $admin_column )
+		{
+			if ( $column_name == $taxonomy_id )
+			{
+				echo get_the_term_list( $post_id, $taxonomy_id, '', ', ', '' );
+				return;
+			}
+		}
+	}
+	
+	/**
+	 * Sorting on taxonomy admin columns.
+	 *
+	 * Thanks goes to Scribu: http://scribu.net/wordpress/sortable-taxonomy-columns.html
+	 * as well as to the commenter "jessica" on StackExchange for bug fixing:
+	 * http://wordpress.stackexchange.com/questions/8811/sortable-admin-columns-when-data-isnt-coming-from-post-meta#comment70352_11256
+	 *
+	 * Action: posts_clauses
+	 * 
+	 * @param array $clauses 
+	 * @param WP_Query $wp_query 
+	 * @return array
+	 */
+	public function _cb_orderby_column( $clauses, $wp_query )
+	{
+		global $wpdb;
+
+		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->admin_columns ) ) 
+		{
+			$clauses['join'] .= <<<SQL
+LEFT OUTER JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID={$wpdb->term_relationships}.object_id
+LEFT OUTER JOIN {$wpdb->term_taxonomy} ON ({$wpdb->term_relationships}.term_taxonomy_id={$wpdb->term_taxonomy}.term_taxonomy_id) AND (taxonomy = '{$wp_query->query['orderby']}' OR taxonomy IS NULL)
+LEFT OUTER JOIN {$wpdb->terms} USING (term_id)
+SQL;
+			$clauses['groupby'] = "ID";
+			$clauses['orderby']  = "GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ";
+			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get('order') ) ) ? 'ASC' : 'DESC';
+		}
+
+		return $clauses;
 	}
 }

@@ -100,7 +100,7 @@ Note how the labels and options arrays passed to `wg-custom-post-type` are ident
 
 * **$post\_type** – Name of the post type. _(string, required)_
 
-* **$args** – Options array as expected by WP:s [register\_post\_type()](http://codex.wordpress.org/Function_Reference/register_post_type) _(array, required)_
+* **$args** – Options array as expected by WP:s [register\_post\_type()](http://codex.wordpress.org/Function_Reference/register_post_type). _(array, required)_
 
 * **$label\_check** – Flag deciding whether the `labels` option should be checked for required labels. _(string, optional, default: 'require\_labels')_
 
@@ -111,15 +111,26 @@ To disable this check, pass 'disabled' as the third parameter.
 
 *Return*: null
 
-### Taxonomy 
+### Taxonomies
 
-	add_taxonomy( $id, $args )
+	add_taxonomy( $id, $args, $admin_column = null )
 	
 * **$id** – Internal ID of the taxonomy. _(string, required)_
 
-* **$args** – Options for the taxonomy as expected in the third argument of WP:s [register\_taxonomy()](http://codex.wordpress.org/Function_Reference/register_post_type) _(array, required)_
+* **$args** – Options for the taxonomy as expected in the third argument of WP:s [register\_taxonomy()](http://codex.wordpress.org/Function_Reference/register_post_type). _(array, required)_
+
+* **$admin\_column** – Options for displaying the taxonomy terms as a column in the list of posts for the current CPT. _(array|boolean, optional)_
 
 Adds a taxonomy to the post type.
+
+Use the last argument to set options for displaying the taxonomy terms in the admin table for the current post type.
+Available options are:
+
+* 'display\_after' – ID of the column this column should be positioned after. _(string, optional, default: 'title')_
+* 'label' - Column heading label. _(string, optional, default: the name of the taxonomy)_
+* 'sortable' - Flag determining if the list should be sortable on this column. _(boolean, optional, default: true)_
+
+Pass `true` as the `$admin_column`-parameter to use the default column options mentioned above.
 
 *Return*: **$this** – For chaining.
 	
@@ -132,7 +143,7 @@ See information about the arguments in the documentation for [wg-meta-box](http:
 
 Return: **$this** – For chaining.
 
-### Additional featured images
+### Featured images
 
 	add_featured_image( $id, $label, array $size_attr = null )
 
