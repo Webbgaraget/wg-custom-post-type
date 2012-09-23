@@ -85,6 +85,15 @@ class WG_Custom_Post_Type
 	 */
 	public function __construct( $post_type, $args, $label_check = 'require_labels' )
 	{
+		// Reserved terms that WordPress wont let us use as custom post type ID.
+		// The list can be found here: http://codex.wordpress.org/Function_Reference/register_post_type#Reserved_Post_Types
+		$reserved = array( 'post', 'page', 'attachment', 'revision', 'nav_menu_item' );
+		
+		if ( in_array( $post_type, $reserved ) )
+		{
+			throw new Exception( __CLASS__ . ": \"{$post_type}\" is a reserved word and cannot be used as ID for a custom post type. More info in the <a href=\"http://codex.wordpress.org/Function_Reference/register_post_type#Reserved_Post_Types\">WordPress Codex</a>" );
+		}
+		
 		if ( is_array( $args ) && 'require_labels' == $label_check )
 		{
 			// Check if all the required labels are set in the arguments
@@ -113,6 +122,16 @@ class WG_Custom_Post_Type
 	 */
 	public function add_taxonomy( $id, $args, $admin_column = null )
 	{
+		// Reserved terms that WordPress wont let us use as taxonomy ID.
+		// The list can be found here: http://codex.wordpress.org/Function_Reference/register_taxonomy#Reserved_Terms
+		$reserved = array( 'attachment', 'attachment_id', 'author', 'author_name', 'calendar', 'cat', 'category', 'category__and', 'category__in', 'category__not_in', 'category_name', 'comments_per_page', 'comments_popup', 'cpage', 'day', 'debug', 'error', 'exact', 'feed', 'hour', 'link_category', 'm', 'minute', 'monthnum', 'more', 'name', 'nav_menu', 'nopaging', 'offset', 'order', 'orderby', 'p', 'page', 'page_id', 'paged', 'pagename', 'pb', 'perm', 'post', 'post__in', 'post__not_in', 'post_format', 'post_mime_type', 'post_status', 'post_tag', 'post_type', 'posts', 'posts_per_archive_page', 'posts_per_page', 'preview', 'robots', 's', 'search', 'second', 'sentence', 'showposts', 'static', 'subpost', 'subpost_id', 'tag', 'tag__and', 'tag__in', 'tag__not_in', 'tag_id', 'tag_slug__and', 'tag_slug__in', 'taxonomy', 'tb', 'term', 'type', 'w', 'withcomments', 'withoutcomments', 'year' );
+		
+		if ( in_array( $id, $reserved ) )
+		{
+			throw new Exception( __CLASS__ . ": add_taxonomy() failed, \"{$id}\" is a reserved term and cannot be used as taxonomy ID. More information in the <a href=\"http://codex.wordpress.org/Function_Reference/register_taxonomy#Reserved_Terms\">WordPress Codex</a>." );
+		}
+		
+		
 		// Save taxonomy for later when the init callback is called
 		$this->_taxonomies[] = array(
 			'slug'         => $id,

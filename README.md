@@ -175,6 +175,7 @@ Return: **$this** – For chaining.
 
 ### 2012-09-23 v0.2
 * Added support for admin columns. Fixes #1
+* Throwing exception if reserved names for CPT or taxonomies are used. Fixes #2
 
 ### 2012-09-12 v0.1 alpha release
 * This document was created
