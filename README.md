@@ -173,6 +173,9 @@ Return: **$this** – For chaining.
 
 ## Changelog
 
+### 2012-09-23 v0.2
+* Added support for admin columns. Fixes #1
+
 ### 2012-09-12 v0.1 alpha release
 * This document was created
 * The library was modified to adhere more closely (but not fully) to WordPress Coding Standards
