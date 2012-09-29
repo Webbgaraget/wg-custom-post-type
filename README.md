@@ -194,7 +194,7 @@ Sets the screen icon for this CPT. The screen icon is shown in the upper left co
 
 *Return*: **$this** – For chaining.
 
-## Help tabs
+## Contextual help using help tabs
 
 Help tabs provides the user with contextual help on the screens for this CPT. The help tabs can be found by clicking the "Help"
 dropdown button next to "Screen options".
