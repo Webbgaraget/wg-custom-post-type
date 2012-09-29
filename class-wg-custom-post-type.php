@@ -94,6 +94,13 @@ class WG_Custom_Post_Type
 			throw new Exception( __CLASS__ . ": \"{$post_type}\" is a reserved word and cannot be used as ID for a custom post type. More info in the <a href=\"http://codex.wordpress.org/Function_Reference/register_post_type#Reserved_Post_Types\">WordPress Codex</a>" );
 		}
 		
+		// According to the DB schema of WordPress, $post_type can't be longer than 20 characters
+		// http://codex.wordpress.org/Post_Types#Naming_Best_Practices
+		if ( strlen( $post_type ) > 20 )
+		{
+			throw new Exception( __CLASS__ . ": \"{$post_type}\" (length: " . strlen( $post_type ) . ") is longer than the allowed 20 characters. More info in the <a href=\"http://codex.wordpress.org/Post_Types#Naming_Best_Practices\">WordPress Codex</a>" );
+		}
+		
 		if ( is_array( $args ) && 'require_labels' == $label_check )
 		{
 			// Check if all the required labels are set in the arguments
