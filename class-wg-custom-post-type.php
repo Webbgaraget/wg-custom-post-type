@@ -263,7 +263,7 @@ class WG_Custom_Post_Type
 	 * @param array $tabs The tabs to add
 	 * @return $this For chaining
 	 */
-	public function add_help_tabs( $tabs = array() )
+	public function add_help_tabs( array $tabs )
 	{
 		foreach ( $tabs as $tab )
 		{
@@ -282,7 +282,7 @@ class WG_Custom_Post_Type
 	 * @param array $tab Settings for the tab
 	 * @return $this For chaining
 	 */
-	public function add_help_tab( $tab = array() )
+	public function add_help_tab( array $tab )
 	{
 		if ( is_null( $this->_help_tabs ) )
 		{
