@@ -31,6 +31,12 @@ class WG_Custom_Post_Type
 	protected $_taxonomies = array();
 
 	/**
+	 * Admin columns for taxonomies
+	 * @var array
+	 */
+	protected $_admin_columns = array();
+
+	/**
 	 * Placeholder text for the "Title" input field
 	 * @var string
 	 */
@@ -169,10 +175,8 @@ class WG_Custom_Post_Type
 				$admin_column = array_merge( $default_admin_column, $admin_column );
 			}
 			
-			if ( ! is_array( $this->admin_columns ) )
+			if ( count( $this->_admin_columns ) == 0 )
 			{
-				$this->admin_columns = array();
-				
 				// Add columns to the admin screen
 				add_filter( "manage_{$this->post_type}_posts_columns", array( &$this, '_cb_register_columns' ) );
 				add_filter( "manage_edit-{$this->post_type}_sortable_columns", array( &$this, '_cb_sortable_columns' ) );
@@ -180,7 +184,7 @@ class WG_Custom_Post_Type
 				add_filter( 'posts_clauses', array( &$this, '_cb_orderby_column' ), 10, 2 );
 			}
 			
-			$this->admin_columns[ $id ] = $admin_column;
+			$this->_admin_columns[ $id ] = $admin_column;
 		}
 
 		return $this;
@@ -484,7 +488,7 @@ class WG_Custom_Post_Type
 	 */
 	public function _cb_register_columns( $post_columns )
 	{
-		foreach ( $this->admin_columns as $taxonomy_id => $admin_column )
+		foreach ( $this->_admin_columns as $taxonomy_id => $admin_column )
 		{
 			$index = array_search( $admin_column['display_after'], array_keys( $post_columns ) ) + 1;
 			$new_columns = array_slice( $post_columns, 0, $index );
@@ -498,7 +502,7 @@ class WG_Custom_Post_Type
 	
 	public function _cb_sortable_columns( $columns )
 	{
-		foreach ( $this->admin_columns as $taxonomy_id => $admin_column )
+		foreach ( $this->_admin_columns as $taxonomy_id => $admin_column )
 		{
 			if ( true === $admin_column['sortable'] )
 			{
@@ -517,7 +521,7 @@ class WG_Custom_Post_Type
 	 */
 	public function _cb_display_column_values( $column_name, $post_id )
 	{
-		foreach ( $this->admin_columns as $taxonomy_id => $admin_column )
+		foreach ( $this->_admin_columns as $taxonomy_id => $admin_column )
 		{
 			if ( $column_name == $taxonomy_id )
 			{
@@ -544,7 +548,7 @@ class WG_Custom_Post_Type
 	{
 		global $wpdb;
 
-		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->admin_columns ) ) 
+		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->_admin_columns ) ) 
 		{
 			$clauses['join'] .= <<<SQL
 LEFT OUTER JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID={$wpdb->term_relationships}.object_id
