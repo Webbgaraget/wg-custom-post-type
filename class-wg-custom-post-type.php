@@ -48,15 +48,15 @@ class WG_Custom_Post_Type
 	 * @var array
 	 */
 	protected $_required_labels = array(
-		'name'				,
-		'singular_name'		,
-		'all_items'			,
-		'add_new_item'		,
-		'edit_item'			,
-		'new_item'			,
-		'view_item'			,
-		'search_items'		,
-		'not_found'			,
+		'name',
+		'singular_name',
+		'all_items',
+		'add_new_item',
+		'edit_item',
+		'new_item',
+		'view_item',
+		'search_items',
+		'not_found',
 		'not_found_in_trash',
 	);
 
@@ -73,9 +73,10 @@ class WG_Custom_Post_Type
 	protected $_screen_icon;
 
 
-/************************************************
- * Publicly available interface
- ************************************************/
+	/************************************************
+	 * Publicly available interface
+	 ************************************************/
+
 	/**
 	 * Creates the custom post type (CPT)
 	 *
@@ -98,7 +99,7 @@ class WG_Custom_Post_Type
 		// http://codex.wordpress.org/Post_Types#Naming_Best_Practices
 		if ( strlen( $post_type ) > 20 )
 		{
-			throw new Exception( __CLASS__ . ": \"{$post_type}\" (length: " . strlen( $post_type ) . ") is longer than the allowed 20 characters. More info in the <a href=\"http://codex.wordpress.org/Post_Types#Naming_Best_Practices\">WordPress Codex</a>" );
+			throw new Exception( __CLASS__ . ": \"{$post_type}\" (length: " . strlen( $post_type ) . ') is longer than the allowed 20 characters. More info in the <a href=\"http://codex.wordpress.org/Post_Types#Naming_Best_Practices\">WordPress Codex</a>' );
 		}
 		
 		if ( is_array( $args ) && 'require_labels' == $label_check )
@@ -235,7 +236,7 @@ class WG_Custom_Post_Type
 			return;
 		}
 
-		new MultiPostThumbnails(
+		$thumb = new MultiPostThumbnails(
 			array(
 				'id'		=> $id,
 				'label'		=> $label,
@@ -372,12 +373,13 @@ class WG_Custom_Post_Type
 	}
 
 
-/************************************************
- * Callbacks called by WP hooks
- ************************************************/
+	/************************************************
+	 * Callbacks called by WP hooks
+	 ************************************************/
+
 	/**
 	 * Action callback for registering the CPT with given name and options
-	 * Action: "init"
+	 * @wp-hook init
 	 */
 	public function _cb_init()
 	{
@@ -400,7 +402,7 @@ class WG_Custom_Post_Type
 
 	/**
 	 * Action callback for outputting custom CSS to the admin area
-	 * Action: "admin_head"
+	 * @wp-hook admin_head
 	 */
 	public function _cb_admin_head()
 	{
@@ -449,7 +451,7 @@ class WG_Custom_Post_Type
 
 	/**
 	 * Action callback for adding help tabs and help sidebar.
-	 * Action: "load-{$GLOBALS['pagenow']}"
+	 * @wp-hook load-{$GLOBALS['pagenow']}
 	 */
 	public function _cb_add_help_to_screen()
 	{
@@ -475,7 +477,7 @@ class WG_Custom_Post_Type
 	
 	/**
 	 * Adds columns to the admin screen for this post type
-	 * Action: "manage_{$this->post_type}_posts_columns"
+	 * @wp-hook manage_{$this->post_type}_posts_columns
 	 * 
 	 * @param array $post_columns
 	 * @return array
@@ -549,9 +551,9 @@ LEFT OUTER JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID={$wpdb->term_re
 LEFT OUTER JOIN {$wpdb->term_taxonomy} ON ({$wpdb->term_relationships}.term_taxonomy_id={$wpdb->term_taxonomy}.term_taxonomy_id) AND (taxonomy = '{$wp_query->query['orderby']}' OR taxonomy IS NULL)
 LEFT OUTER JOIN {$wpdb->terms} USING (term_id)
 SQL;
-			$clauses['groupby'] = "ID";
-			$clauses['orderby']  = "GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ";
-			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get('order') ) ) ? 'ASC' : 'DESC';
+			$clauses['groupby']  = 'ID';
+			$clauses['orderby']  = 'GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ';
+			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get( 'order' ) ) ) ? 'ASC' : 'DESC';
 		}
 
 		return $clauses;
