@@ -201,9 +201,9 @@ class WG_Custom_Post_Type
 	{
 		if ( ! class_exists( 'WGMetaBox' ) )
 		{
-			if ( file_exists( dirname( __FILE__ ) . '/lib/wg-meta-box/WGMetaBox.php' ) )
+			if ( file_exists( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' ) )
 			{
-				require_once( dirname( __FILE__ ) . '/lib/wg-meta-box/WGMetaBox.php' );
+				require_once( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' );
 			}
 			else
 			{
