@@ -144,7 +144,7 @@ Pass `true` as the `$admin_column`-parameter to use the default column options m
 	
 ### Meta box
 
-	add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default' )
+	add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
 
 This method uses the method `WGMetaBox::add_meta_box()` to create the meta box.
 See information about the arguments in the documentation for [wg-meta-box](http://github.com/webbgaraget/wg-meta-box "wg-meta-box @ Github").
@@ -227,6 +227,10 @@ Sets the content for the help sidebar for this CPT
 
 
 ## Changelog
+
+### 2013-02-13 v0.2.2
+* Upgraded to use latest WGMetaBox.
+* Adds ability to pass $callback_args to add_meta_box().
 
 ### 2012-09-29 v0.2.1
 * Throwing exception when $post_type ID is longer than 20 characters. Fixes #3
