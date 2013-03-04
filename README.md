@@ -228,6 +228,9 @@ Sets the content for the help sidebar for this CPT
 
 ## Changelog
 
+### 2013-03-04 v0.2.3
+* Upgraded WGMetaBox to v0.5.4
+
 ### 2013-02-13 v0.2.2
 * Upgraded to use latest WGMetaBox.
 * Adds ability to pass $callback_args to add_meta_box().
