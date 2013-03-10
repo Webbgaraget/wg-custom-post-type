@@ -37,6 +37,12 @@ class WG_Custom_Post_Type
 	protected $_admin_columns = array();
 
 	/**
+	 * Taxonomies that admin lists will be filterable by
+	 * @var array
+	 */
+	protected $_filterable_by = array();
+
+	/**
 	 * Placeholder text for the "Title" input field
 	 * @var string
 	 */
@@ -186,6 +192,56 @@ class WG_Custom_Post_Type
 			
 			$this->_admin_columns[ $id ] = $admin_column;
 		}
+
+		return $this;
+	}
+
+	public function add_existing_taxonomy( $id, $filterable = false )
+	{
+		$args = $this->post_type_args;
+
+		if ( ! isset( $args['taxonomies'] ) ) 
+		{
+			$args['taxonomies'] = array();
+		}
+
+		if ( ! is_array( $args['taxonomies'] ) )
+		{
+			$args['taxonomies'] = array( $args['taxonomies'] );
+		}
+
+		$args['taxonomies'][] = $id;
+
+		$this->post_typ_args = $args;
+
+		if ( $filterable )
+		{
+			$this->make_filterable_by( $id );
+		}
+
+		return $this;
+	}
+
+	
+	public function make_filterable_by( $taxonomies )
+	{
+		if ( ! is_admin() )
+		{
+			return;
+		}
+
+		if ( ! is_array( $taxonomies ) )
+		{
+			$taxonomies = array( $taxonomies );
+		}
+
+		if ( count( $this->_filterable_by ) == 0 && ! has_action( 'restrict_manage_posts', array( $this, '_cb_restrict_manage_posts' ) ) )
+		{
+			// Add actions for filtering
+			add_action( 'restrict_manage_posts', array( $this, '_cb_restrict_manage_posts' ) );
+		}
+
+		$this->_filterable_by = array_merge( $this->_filterable_by, $taxonomies );
 
 		return $this;
 	}
@@ -478,6 +534,33 @@ class WG_Custom_Post_Type
 		if ( ! is_null( $this->_help_sidebar ) )
 		{
 			$screen->set_help_sidebar( $this->_help_sidebar );
+		}
+	}
+
+	public function _cb_restrict_manage_posts()
+	{
+		global $typenow;
+		global $wp_query;
+
+		if ( $this->post_type !== $typenow )
+		{
+			return;
+		}
+		
+		foreach ( $this->_filterable_by as $taxonomy_id )
+		{
+			$taxonomy = get_taxonomy( $taxonomy_id );
+			d($taxonomy);
+			wp_dropdown_categories(
+				array(
+					'show_option_all' =>  __( "Show All {$taxonomy->label} "),
+					'taxonomy'        =>  $taxonomy_id,
+					'name'            =>  $taxonomy_id,
+					'orderby'         =>  'name',
+					'hierarchical'    =>  true,
+					'hide_empty'      =>  true, // Don't show businesses w/o listings
+				)
+			);
 		}
 	}
 	
