@@ -196,49 +196,75 @@ class WG_Custom_Post_Type
 		return $this;
 	}
 
-	public function add_existing_taxonomy( $id, $filterable = false )
+	/**
+	 * Adds a previously registered taxonomy to this post type
+	 * 
+	 * If the $filterable parameter is true, the admin screens for the post type
+	 * will be filterable by the given taxonomy.
+	 * 
+	 * @param  string $taxonomy_id Slug of taxonomy to be added
+	 * @param  boolean $filterable 
+	 * @return $this for chaining
+	 */
+	public function add_existing_taxonomy( $taxonomy_id, $filterable = false )
 	{
 		$args = $this->post_type_args;
 
 		if ( ! isset( $args['taxonomies'] ) ) 
 		{
+			// No taxonomies have been added yet, create the argument
 			$args['taxonomies'] = array();
 		}
 
-		if ( ! is_array( $args['taxonomies'] ) )
-		{
-			$args['taxonomies'] = array( $args['taxonomies'] );
-		}
-
-		$args['taxonomies'][] = $id;
-
-		$this->post_typ_args = $args;
+		$args['taxonomies'][] = $taxonomy_id;
+		$this->post_type_args = $args;
 
 		if ( $filterable )
 		{
-			$this->make_filterable_by( $id );
+			$this->make_filterable_by( $taxonomy_id );
 		}
 
 		return $this;
 	}
 
-	
-	public function make_filterable_by( $taxonomies )
+	/**
+	 * Adds multiple previously registered taxonomies to this post type
+	 * 
+	 * If the $filterable parameter is true, the admin screens for the post type
+	 * will be filterable by the given taxonomies.
+	 * 
+	 * @param  array   $taxonomy_ids Slugs of taxonomies to be added
+	 * @param  boolean $filterable 
+	 * @return $this   For chaining
+	 */
+	public function add_existing_taxonomies( $taxonomy_ids, $filterable = false )
 	{
-		if ( ! is_admin() )
+		foreach ( $taxonomy_ids as $taxonomy_id )
 		{
-			return;
+			$this->add_existing_taxonomy( $taxonomy_id, $filterable );
 		}
 
+		return $this;
+	}
+
+	/**
+	 * Makes the admin screens for the post type filterable by the given taxonomies
+	 * 
+	 * @param  array $taxonomies Slugs for the taxonomies to add ass filters
+	 * @return $this For chaining
+	 */
+	public function make_filterable_by( $taxonomies )
+	{
 		if ( ! is_array( $taxonomies ) )
 		{
 			$taxonomies = array( $taxonomies );
 		}
 
-		if ( count( $this->_filterable_by ) == 0 && ! has_action( 'restrict_manage_posts', array( $this, '_cb_restrict_manage_posts' ) ) )
+		if ( count( $this->_filterable_by ) == 0 )
 		{
 			// Add actions for filtering
 			add_action( 'restrict_manage_posts', array( $this, '_cb_restrict_manage_posts' ) );
+			add_action( 'parse_query', array( $this, '_cb_parse_query' ) );
 		}
 
 		$this->_filterable_by = array_merge( $this->_filterable_by, $taxonomies );
@@ -537,39 +563,85 @@ class WG_Custom_Post_Type
 		}
 	}
 
+
+	/**
+	 * Adds dropdowns for filtering the admin list, based on the
+	 * taxonomies that have been added to this post type as filters.
+	 * 
+	 * @wp-hook restrict_manage_posts
+	 * @see     make_filterable_by()
+	 * @return  void
+	 */
 	public function _cb_restrict_manage_posts()
 	{
 		global $typenow;
-		global $wp_query;
 
-		if ( $this->post_type !== $typenow )
+		if ( $typenow !== $this->post_type )
 		{
+			// We only want to do this in the admin screen for this post type
 			return;
 		}
 		
 		foreach ( $this->_filterable_by as $taxonomy_id )
 		{
 			$taxonomy = get_taxonomy( $taxonomy_id );
-			d($taxonomy);
 			wp_dropdown_categories(
 				array(
-					'show_option_all' =>  __( "Show All {$taxonomy->label} "),
-					'taxonomy'        =>  $taxonomy_id,
-					'name'            =>  $taxonomy_id,
-					'orderby'         =>  'name',
-					'hierarchical'    =>  true,
-					'hide_empty'      =>  true, // Don't show businesses w/o listings
+					'show_option_all' => sprintf( __( 'Show all %1$s' ), $taxonomy->label ),
+					'taxonomy'        => $taxonomy_id,
+					'name'            => $taxonomy_id,
+					'orderby'         => 'name',
+					'hierarchical'    => true,
+					'hide_empty'      => true,
+					'selected'        => isset( $_GET[ $taxonomy_id ] ) ? $_GET[ $taxonomy_id ] : 0,
 				)
 			);
 		}
 	}
+
+	/**
+	 * Modifies the posts query to make the taxonomy filters work (see above and make_filterable_by())
+	 * 
+	 * @wp-hook parse_query
+	 * @param   WP_Query $query
+	 * @return  WP_Query $query with potentially modified query_vars
+	 */
+	public function _cb_parse_query( $query )
+	{
+		global $typenow, $pagenow;
+
+		if ( ! is_admin() || $typenow !== $this->post_type || $pagenow !== 'edit.php' )
+		{
+			// We only want to do this in the admin screen for this post type
+			return;
+		}
+
+		$query_vars = &$query->query_vars;
+
+		foreach ( $this->_filterable_by as $taxonomy_id )
+		{
+			if ( isset( $_GET[ $taxonomy_id ] ) && $_GET[ $taxonomy_id ] !== '0' )
+			{
+				// Get the selected term
+				$term = get_term_by( 'id', $_GET[ $taxonomy_id ], $taxonomy_id );
+
+				if ( ! is_null( $term ) )
+				{
+					// Add query var for the term
+					$query_vars[ $taxonomy_id ] = $term->slug;
+				}
+			}
+		}
+
+		return $query;
+	}
 	
 	/**
 	 * Adds columns to the admin screen for this post type
-	 * @wp-hook manage_{$this->post_type}_posts_columns
 	 * 
-	 * @param array $post_columns
-	 * @return array
+	 * @wp-hook manage_{$this->post_type}_posts_columns
+	 * @param   array $post_columns
+	 * @return  array
 	 */
 	public function _cb_register_columns( $post_columns )
 	{
@@ -602,7 +674,7 @@ class WG_Custom_Post_Type
 	 * Outputs the value for the columns we have added to the admin screen
 	 * Action: manage_{$this->post_type}_custom_column
 	 *
-	 * @param string $column_name 
+	 * @param string $column_name
 	 */
 	public function _cb_display_column_values( $column_name, $post_id )
 	{
@@ -635,14 +707,14 @@ class WG_Custom_Post_Type
 
 		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->_admin_columns ) ) 
 		{
-			$clauses['join'] .= <<<SQL
+			$clauses['groupby']  = 'ID';
+			$clauses['orderby']  = 'GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ';
+			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get( 'order' ) ) ) ? 'ASC' : 'DESC';
+			$clauses['join']    .= <<<SQL
 LEFT OUTER JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID={$wpdb->term_relationships}.object_id
 LEFT OUTER JOIN {$wpdb->term_taxonomy} ON ({$wpdb->term_relationships}.term_taxonomy_id={$wpdb->term_taxonomy}.term_taxonomy_id) AND (taxonomy = '{$wp_query->query['orderby']}' OR taxonomy IS NULL)
 LEFT OUTER JOIN {$wpdb->terms} USING (term_id)
 SQL;
-			$clauses['groupby']  = 'ID';
-			$clauses['orderby']  = 'GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ';
-			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get( 'order' ) ) ) ? 'ASC' : 'DESC';
 		}
 
 		return $clauses;
