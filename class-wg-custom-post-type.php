@@ -594,6 +594,7 @@ class WG_Custom_Post_Type
 					'hierarchical'    => true,
 					'hide_empty'      => true,
 					'selected'        => isset( $_GET[ $taxonomy_id ] ) ? $_GET[ $taxonomy_id ] : 0,
+					'hide_if_empty'   => true,
 				)
 			);
 		}
