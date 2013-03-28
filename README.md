@@ -23,6 +23,20 @@ is added as a submodule to this repository, see below on how to initialize it.
 need to install and activate the plugin in order to use this functionality.
 
 
+## Table of Contents
+
+- [Getting started](#getting-started)
+- [Example: Creating your first custom post type](#example-creating-your-first-custom-post-type)
+- [The Basics](#the-basics)
+	- [Constructor](#constructor)
+	- [Taxonomies](#taxonomies)
+	- [Meta box](#meta-box)
+	- [Featured images](#featured-images)
+- [Customizing the admin screen](#customizing-the-admin-screen)
+- [Contextual help using help tabs](#contextual-help-using-help-tabs)
+- [Changelog](#changelog)
+- [License (MIT)](#license-mit)
+
 ## Getting started
 
 To get started using this library, either clone it or download the zip and unpack it into the folder of choice.
@@ -43,7 +57,7 @@ Unpack the zip file where you want the library to reside. Then head on over to [
 
 ### 2. Include the class file
 
-Include the php file residing `class-wg-custom-post-type.php` in the recently cloned/unzipped folder.
+Include the php file `class-wg-custom-post-type.php` residing in the recently cloned/unzipped folder.
 
 	require_once( 'lib/wg-custom-post-type/class-wg-custom-post-type.php' );
 
@@ -66,36 +80,48 @@ This is a simple example on how to create a CPT for Events:
 	);
 
 	// Create the CPT
-	$event = new WG_Custom_Post_Type( 'event', array(
-	    'capability_type' => 'page',
-		'labels'          => $labels,
-		'hierarchial'     => true,
-		'supports'        => array( 'title' ),
-	) );
+	$event = new WG_Custom_Post_Type(
+		'event',
+		array(
+		    'capability_type' => 'page',
+			'labels'          => $labels,
+			'hierarchial'     => true,
+			'supports'        => array( 'title' ),
+		)
+	);
 
 	// Create a taxonomy for event types and a meta box for event information
 	$event
-		->add_taxonomy( 'event-type', array(
-			'labels' => array(
-				'name'          => 'Event types',
-				'singular_name' => 'Event type',
-				'add_new_item'  => 'Add new type',
-				'edit_item'     => 'Edit type',
-				'update_item'   => 'Update type',
+		->add_taxonomy(
+			'event-type',
+			array(
+				'labels' => array(
+					'name'          => 'Event types',
+					'singular_name' => 'Event type',
+					'add_new_item'  => 'Add new type',
+					'edit_item'     => 'Edit type',
+					'update_item'   => 'Update type',
+				),
+			),
+			true, // We want an admin column for this taxonomy
+			true  // We want the admin list to be filterable by this taxonomy
+		)
+		->add_meta_box(
+			'event-info',
+			'Event information',
+			array(
+				'date' => array(
+			        'type'  => 'date',
+			        'label' => 'Date',
+			    ),
+			    'time' => array(
+			        'type'  => 'text',
+			        'label' => 'Time',
+			    ),
 			)
-		) )
-		->add_meta_box( 'event-info', 'Event information', array(
-			'date' => array(
-		        'type'  => 'date',
-		        'label' => 'Date',
-		    ),
-		    'time' => array(
-		        'type'  => 'text',
-		        'label' => 'Time',
-		    )
-		) );
+		);
 	
-Note how the labels and options arrays passed to `wg-custom-post-type` are identical to the ones you usually pass to `register_post_type()`.
+Note how the labels and options array arguments are identical to the ones you usually pass to `register_post_type()` and `register_taxonomy()`.
 
 ## The Basics
 
@@ -119,7 +145,9 @@ An exception is thrown if the `$post_type` is one of the [reserved post types](h
 
 ### Taxonomies
 
-	add_taxonomy( $id, $args, $admin_column = null )
+#### `add_taxonomy`
+
+	add_taxonomy( $id, $args, $admin_column = null, $admin_filter = false )
 	
 * **$id** – Internal ID of the taxonomy. _(string, required)_
 
@@ -127,18 +155,54 @@ An exception is thrown if the `$post_type` is one of the [reserved post types](h
 
 * **$admin\_column** – Options for displaying the taxonomy terms as a column in the list of posts for the current CPT. _(array|boolean, optional)_
 
+* **$admin\_filter** – Whether the admin list of this post type should be filterable by this taxonomy. _(boolean, optional)_
+
 Adds a taxonomy to the post type.
 
 An exception is thrown if the `$id` is one of the [reserved terms](http://codex.wordpress.org/Function_Reference/register_taxonomy#Reserved_Terms).
 
-Pass an array as the last argument to set options for displaying the taxonomy terms in the admin table for the current post type.
+**Admin column**
+
+Pass an array as the last parameter to set options for displaying the taxonomy terms in the admin table for the current post type.
 Available options are:
 
 * 'display\_after' – ID of the column this column should be positioned after. _(string, optional, default: 'title')_
 * 'label' - Column heading label. _(string, optional, default: the name of the taxonomy)_
 * 'sortable' - Flag determining if the list should be sortable on this column. _(boolean, optional, default: true)_
 
-Pass `true` as the `$admin_column`-parameter to use the default column options mentioned above.
+Pass `true` as the `$admin_column` parameter to use the default column options mentioned above.
+
+**Admin filter**
+
+If the `$admin_filter` parameter is set to `true`, a selectbox is added to the admin list to let the user filter by this taxonomy.
+
+*Return*: **$this** – For chaining.
+
+#### `add_existing_taxonomy`
+
+	add_existing_taxonomy( $taxonomy_id, $admin_filter = false )
+
+* **$taxonomy\_id** – Internal ID of the taxonomy. _(string, required)_
+* **$admin\_filter** – Whether the admin list of this post type should be filterable by this taxonomy. _(boolean, optional)_
+
+Adds a previously registered taxonomy to this post type.
+
+If the `$admin_filter` parameter is `true`, the admin list for the post type
+will be filterable by the given taxonomy.
+
+*Return*: **$this** – For chaining.
+
+#### `add_existing_taxonomies`
+
+	add_existing_taxonomies( $taxonomy_ids, $admin_filter = false )
+
+* **$taxonomy\_ids** – Array of internal ID:s of the taxonomies to be added. _(array, required)_
+* **$admin\_filter** – Whether the admin list of this post type should be filterable by these taxonomies. _(boolean, optional)_
+
+Adds multiple previously registered taxonomies to this post type
+
+If the `$admin_filter` parameter is `true`, the admin list for the post type
+will be filterable by the given taxonomies.
 
 *Return*: **$this** – For chaining.
 	
@@ -170,6 +234,8 @@ corresponding to the arguments expected by WP:s [add\_image\_size()](http://code
 
 ## Customizing the admin screen
 
+#### `set_title_placeholder`
+
 	set_title_placeholder( $placeholder )
 
 * **$placeholder** - The text to set as placeholder _(string, required)_
@@ -178,6 +244,8 @@ Sets the placeholder in the "Title" input field when adding or editing an item o
 
 *Return*: **$this** – For chaining.
 
+#### `set_menu_icon`
+
 	set_menu_icon( $icon_url )
 
 * **$icon\_url** - Full URL for the icon sprite _(string, required)_
@@ -185,6 +253,8 @@ Sets the placeholder in the "Title" input field when adding or editing an item o
 Sets the admin menu icon for this CPT. This method expects an icon sprite as described/developed by [Randy Jensen](http://randyjensenonline.com/thoughts/wordpress-custom-post-type-fugue-icons/).
 
 *Return*: **$this** – For chaining.
+
+#### `set_screen_icon`
 
 	set_screen_icon( $icon_url )
 
@@ -201,6 +271,8 @@ dropdown button next to "Screen options".
 
 Along with the help tabs, there's a sidebar in the contextual help that for example can be used to provide links to more information.
 
+#### `add_help_tab`
+
 	add_help_tab( array $tab )
 
 * **$tab** - Options for the tab as excpected by [WP\_Screen::add\_help\_tab()](http://codex.wordpress.org/Function_Reference/add_help_tab) _(array, reqruired)_
@@ -209,6 +281,8 @@ Adds a help tab to the screens for this CPT. For information on the $tab argumen
 
 *Return*: **$this** – For chaining.
 
+#### `add_help_tabs`
+
 	add_help_tabs( array $tabs )
 
 * **$tabs** - An array of tab options (see `add_help_tab()`). _(array, required)_
@@ -216,6 +290,8 @@ Adds a help tab to the screens for this CPT. For information on the $tab argumen
 Adds multiple help tabs to the screens for this CPT. See `add_help_tab()`.
 
 *Return*: **$this** – For chaining.
+
+#### `set_help_sidebar`
 
 	set_help_sidebar( $content )
 
@@ -227,6 +303,12 @@ Sets the content for the help sidebar for this CPT
 
 
 ## Changelog
+
+### 2013-03-28 v0.5
+* Adds methods for adding previously registered taxonomies (add_existing_taxonomy()).
+* Adds possibility to have the post type admin list filterable by taxonomies.
+* Some modifications to this README (adds TOC for example)
+* Version bumped to v0.5
 
 ### 2013-02-13 v0.2.2
 * Upgraded to use latest WGMetaBox.

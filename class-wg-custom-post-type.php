@@ -6,9 +6,10 @@
  * commonly but pretty sweet) features when creating custom post types
  * for WordPress.
  *
- * @author Webbgaraget
- * @link http://www.webbgaraget.se
- * @uses wg-meta-box (http://webbgaraget.github.com/wg-meta-box/)
+ * @author  Webbgaraget
+ * @link    http://www.webbgaraget.se
+ * @uses    wg-meta-box (http://webbgaraget.github.com/wg-meta-box/)
+ * @version 0.5
  */
 class WG_Custom_Post_Type
 {
