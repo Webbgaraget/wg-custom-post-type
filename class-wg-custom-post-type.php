@@ -6,9 +6,10 @@
  * commonly but pretty sweet) features when creating custom post types
  * for WordPress.
  *
- * @author Webbgaraget
- * @link http://www.webbgaraget.se
- * @uses wg-meta-box (http://webbgaraget.github.com/wg-meta-box/)
+ * @author  Webbgaraget
+ * @link    http://www.webbgaraget.se
+ * @uses    wg-meta-box (http://webbgaraget.github.com/wg-meta-box/)
+ * @version 0.5
  */
 class WG_Custom_Post_Type
 {
@@ -35,6 +36,12 @@ class WG_Custom_Post_Type
 	 * @var array
 	 */
 	protected $_admin_columns = array();
+
+	/**
+	 * Taxonomies by which the admin list will be filterable
+	 * @var array
+	 */
+	protected $_admin_filters = array();
 
 	/**
 	 * Placeholder text for the "Title" input field
@@ -127,14 +134,47 @@ class WG_Custom_Post_Type
 	}
 
 	/**
-	 * Adds a new taxonomy and associates it with the CPT.
+	 * Adds a new meta box for the CPT using WGMetaBox::add_meta_box()
+	 * https://github.com/Webbgaraget/wg-meta-box
 	 *
-	 * @param string $id Internal ID of the taxonomy
-	 * @param array $args Options for the taxonomy as expected in the third argument of WP:s register_taxonomy()
-	 * @param boolean|array $admin_column Optional options for displaying the taxonomy terms as a column list of posts for this CPT.
+	 * @param string $id Internal ID of the meta box
+	 * @param string $title The title displayed in the meta box header
+	 * @param array  $fields Array of fields defined as described in WGMetaBox
+	 * @param string $context Optional context of the meta box. Default: 'advanced'
+	 * @param string $priority Optional priority of the meta box. Default: 'default'
+	 * @param array  $callback_args Optional array of callback arguments. See WGMetaBox documentation. Default: null
+	 *
 	 * @return $this For chaining
 	 */
-	public function add_taxonomy( $id, $args, $admin_column = null )
+	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
+	{
+		if ( ! class_exists( 'WGMetaBox' ) )
+		{
+			if ( file_exists( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' ) )
+			{
+				require_once( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' );
+			}
+			else
+			{
+				throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
+			}
+		}
+
+		WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority, $callback_args );
+
+		return $this;
+	}
+
+	/**
+	 * Adds a new taxonomy and associates it with the CPT.
+	 *
+	 * @param string        $id           Internal ID of the taxonomy
+	 * @param array         $args         Options for the taxonomy as expected in the third argument of WP:s register_taxonomy()
+	 * @param boolean|array $admin_column Optional options for displaying the taxonomy terms as a column list of posts for this CPT.
+	 * @param boolean       $admin_filter Optional, default: false. Set to true if the admin list for this post type should be filterable by this taxonomy
+	 * @return $this For chaining
+	 */
+	public function add_taxonomy( $id, $args, $admin_column = null, $admin_filter = false )
 	{
 		// Reserved terms that WordPress wont let us use as taxonomy ID.
 		// The list can be found here: http://codex.wordpress.org/Function_Reference/register_taxonomy#Reserved_Terms
@@ -152,6 +192,7 @@ class WG_Custom_Post_Type
 			'args'         => $args,
 		);
 		
+		// Should we add an admin column?
 		if ( is_array( $admin_column ) || true === $admin_column )
 		{
 			// Set the taxonomy label as default label for the admin column
@@ -187,37 +228,87 @@ class WG_Custom_Post_Type
 			$this->_admin_columns[ $id ] = $admin_column;
 		}
 
+		// Should the admin list for the post type be filterable by this taxonomy?
+		if ( $admin_filter )
+		{
+			$this->make_filterable_by( $id );
+		}
+
 		return $this;
 	}
 
 	/**
-	 * Adds a new meta box for the CPT using WGMetaBox::add_meta_box()
-	 * https://github.com/Webbgaraget/wg-meta-box
-	 *
-	 * @param string $id Internal ID of the meta box
-	 * @param string $title The title displayed in the meta box header
-	 * @param array $fields Array of fields defined as described in WGMetaBox
-	 * @param string $context Optional context of the meta box. Default: 'advanced'
-	 * @param string $priority Optional priority of the meta box. Default: 'default'
-	 * @param array  $callback_args Optional array of callback arguments. See WGMetaBox documentation. Default: null
-	 *
-	 * @return $this For chaining
+	 * Adds a previously registered taxonomy to this post type
+	 * 
+	 * If the $admin_filter parameter is true, the admin list for the post type
+	 * will be filterable by the given taxonomy.
+	 * 
+	 * @param  string $taxonomy_id   Slug of taxonomy to be added
+	 * @param  boolean $admin_filter Optional, default: false
+	 * @return $this for chaining
 	 */
-	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
+	public function add_existing_taxonomy( $taxonomy_id, $admin_filter = false )
 	{
-		if ( ! class_exists( 'WGMetaBox' ) )
+		$args = $this->post_type_args;
+
+		if ( ! isset( $args['taxonomies'] ) ) 
 		{
-			if ( file_exists( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' ) )
-			{
-				require_once( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' );
-			}
-			else
-			{
-				throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
-			}
+			// No taxonomies have been added yet, create the argument
+			$args['taxonomies'] = array();
 		}
 
-		WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority, $callback_args );
+		$args['taxonomies'][] = $taxonomy_id;
+		$this->post_type_args = $args;
+
+		if ( $admin_filter )
+		{
+			$this->make_filterable_by( $taxonomy_id );
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Adds multiple previously registered taxonomies to this post type
+	 * 
+	 * If the $admin_filter parameter is true, the admin list for the post type
+	 * will be filterable by the given taxonomies.
+	 * 
+	 * @param  array   $taxonomy_ids Slugs of taxonomies to be added
+	 * @param  boolean $admin_filter Optional, default: false
+	 * @return $this   For chaining
+	 */
+	public function add_existing_taxonomies( $taxonomy_ids, $admin_filter = false )
+	{
+		foreach ( $taxonomy_ids as $taxonomy_id )
+		{
+			$this->add_existing_taxonomy( $taxonomy_id, $admin_filter );
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Makes the admin list for the post type filterable by the given taxonomies
+	 * 
+	 * @param  array|string $taxonomies Slug(s) for the taxonomies to add as filters
+	 * @return $this For chaining
+	 */
+	public function make_filterable_by( $taxonomies )
+	{
+		if ( ! is_array( $taxonomies ) )
+		{
+			$taxonomies = array( $taxonomies );
+		}
+
+		if ( count( $this->_admin_filters ) == 0 )
+		{
+			// Add actions for filtering
+			add_action( 'restrict_manage_posts', array( $this, '_cb_restrict_manage_posts' ) );
+			add_action( 'parse_query', array( $this, '_cb_parse_query' ) );
+		}
+
+		$this->_admin_filters = array_merge( $this->_admin_filters, $taxonomies );
 
 		return $this;
 	}
@@ -480,13 +571,87 @@ class WG_Custom_Post_Type
 			$screen->set_help_sidebar( $this->_help_sidebar );
 		}
 	}
+
+
+	/**
+	 * Adds dropdowns for filtering the admin list, based on the
+	 * taxonomies that have been added to this post type as filters.
+	 * 
+	 * @wp-hook restrict_manage_posts
+	 * @see     make_filterable_by()
+	 * @return  void
+	 */
+	public function _cb_restrict_manage_posts()
+	{
+		global $typenow;
+
+		if ( $typenow !== $this->post_type )
+		{
+			// We only want to do this in the admin screen for this post type
+			return;
+		}
+		
+		foreach ( $this->_admin_filters as $taxonomy_id )
+		{
+			$taxonomy = get_taxonomy( $taxonomy_id );
+			wp_dropdown_categories(
+				array(
+					'show_option_all' => sprintf( __( 'Show all %1$s' ), $taxonomy->label ),
+					'taxonomy'        => $taxonomy_id,
+					'name'            => $taxonomy_id,
+					'orderby'         => 'name',
+					'hierarchical'    => true,
+					'hide_empty'      => true,
+					'selected'        => isset( $_GET[ $taxonomy_id ] ) ? $_GET[ $taxonomy_id ] : 0,
+					'hide_if_empty'   => true,
+				)
+			);
+		}
+	}
+
+	/**
+	 * Modifies the posts query to make the taxonomy filters work (see above and make_filterable_by())
+	 * 
+	 * @wp-hook parse_query
+	 * @param   WP_Query $query
+	 * @return  WP_Query $query with potentially modified query_vars
+	 */
+	public function _cb_parse_query( $query )
+	{
+		global $typenow, $pagenow;
+
+		if ( ! is_admin() || $typenow !== $this->post_type || $pagenow !== 'edit.php' )
+		{
+			// We only want to do this in the admin screen for this post type
+			return;
+		}
+
+		$query_vars = &$query->query_vars;
+
+		foreach ( $this->_admin_filters as $taxonomy_id )
+		{
+			if ( isset( $_GET[ $taxonomy_id ] ) && $_GET[ $taxonomy_id ] !== '0' )
+			{
+				// Get the selected term
+				$term = get_term_by( 'id', $_GET[ $taxonomy_id ], $taxonomy_id );
+
+				if ( ! is_null( $term ) )
+				{
+					// Add query var for the term
+					$query_vars[ $taxonomy_id ] = $term->slug;
+				}
+			}
+		}
+
+		return $query;
+	}
 	
 	/**
 	 * Adds columns to the admin screen for this post type
-	 * @wp-hook manage_{$this->post_type}_posts_columns
 	 * 
-	 * @param array $post_columns
-	 * @return array
+	 * @wp-hook manage_{$this->post_type}_posts_columns
+	 * @param   array $post_columns
+	 * @return  array
 	 */
 	public function _cb_register_columns( $post_columns )
 	{
@@ -519,7 +684,7 @@ class WG_Custom_Post_Type
 	 * Outputs the value for the columns we have added to the admin screen
 	 * Action: manage_{$this->post_type}_custom_column
 	 *
-	 * @param string $column_name 
+	 * @param string $column_name
 	 */
 	public function _cb_display_column_values( $column_name, $post_id )
 	{
@@ -552,14 +717,14 @@ class WG_Custom_Post_Type
 
 		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->_admin_columns ) ) 
 		{
-			$clauses['join'] .= <<<SQL
+			$clauses['groupby']  = 'ID';
+			$clauses['orderby']  = 'GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ';
+			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get( 'order' ) ) ) ? 'ASC' : 'DESC';
+			$clauses['join']    .= <<<SQL
 LEFT OUTER JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID={$wpdb->term_relationships}.object_id
 LEFT OUTER JOIN {$wpdb->term_taxonomy} ON ({$wpdb->term_relationships}.term_taxonomy_id={$wpdb->term_taxonomy}.term_taxonomy_id) AND (taxonomy = '{$wp_query->query['orderby']}' OR taxonomy IS NULL)
 LEFT OUTER JOIN {$wpdb->terms} USING (term_id)
 SQL;
-			$clauses['groupby']  = 'ID';
-			$clauses['orderby']  = 'GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ';
-			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get( 'order' ) ) ) ? 'ASC' : 'DESC';
 		}
 
 		return $clauses;
