@@ -304,6 +304,9 @@ Sets the content for the help sidebar for this CPT
 
 ## Changelog
 
+### 2013-03-28 v0.5.1
+* Upgrades WGMetaBox to v0.5.5
+
 ### 2013-03-28 v0.5
 * Adds methods for adding previously registered taxonomies (add_existing_taxonomy()).
 * Adds possibility to have the post type admin list filterable by taxonomies.
