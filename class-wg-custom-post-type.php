@@ -37,10 +37,10 @@ class WG_Custom_Post_Type
 	protected $_admin_columns = array();
 
 	/**
-	 * Taxonomies that admin lists will be filterable by
+	 * Taxonomies by which the admin list will be filterable
 	 * @var array
 	 */
-	protected $_filterable_by = array();
+	protected $_admin_filters = array();
 
 	/**
 	 * Placeholder text for the "Title" input field
@@ -133,14 +133,47 @@ class WG_Custom_Post_Type
 	}
 
 	/**
-	 * Adds a new taxonomy and associates it with the CPT.
+	 * Adds a new meta box for the CPT using WGMetaBox::add_meta_box()
+	 * https://github.com/Webbgaraget/wg-meta-box
 	 *
-	 * @param string $id Internal ID of the taxonomy
-	 * @param array $args Options for the taxonomy as expected in the third argument of WP:s register_taxonomy()
-	 * @param boolean|array $admin_column Optional options for displaying the taxonomy terms as a column list of posts for this CPT.
+	 * @param string $id Internal ID of the meta box
+	 * @param string $title The title displayed in the meta box header
+	 * @param array  $fields Array of fields defined as described in WGMetaBox
+	 * @param string $context Optional context of the meta box. Default: 'advanced'
+	 * @param string $priority Optional priority of the meta box. Default: 'default'
+	 * @param array  $callback_args Optional array of callback arguments. See WGMetaBox documentation. Default: null
+	 *
 	 * @return $this For chaining
 	 */
-	public function add_taxonomy( $id, $args, $admin_column = null )
+	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
+	{
+		if ( ! class_exists( 'WGMetaBox' ) )
+		{
+			if ( file_exists( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' ) )
+			{
+				require_once( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' );
+			}
+			else
+			{
+				throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
+			}
+		}
+
+		WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority, $callback_args );
+
+		return $this;
+	}
+
+	/**
+	 * Adds a new taxonomy and associates it with the CPT.
+	 *
+	 * @param string        $id           Internal ID of the taxonomy
+	 * @param array         $args         Options for the taxonomy as expected in the third argument of WP:s register_taxonomy()
+	 * @param boolean|array $admin_column Optional options for displaying the taxonomy terms as a column list of posts for this CPT.
+	 * @param boolean       $admin_filter Optional, default: false. Set to true if the admin list for this post type should be filterable by this taxonomy
+	 * @return $this For chaining
+	 */
+	public function add_taxonomy( $id, $args, $admin_column = null, $admin_filter = false )
 	{
 		// Reserved terms that WordPress wont let us use as taxonomy ID.
 		// The list can be found here: http://codex.wordpress.org/Function_Reference/register_taxonomy#Reserved_Terms
@@ -158,6 +191,7 @@ class WG_Custom_Post_Type
 			'args'         => $args,
 		);
 		
+		// Should we add an admin column?
 		if ( is_array( $admin_column ) || true === $admin_column )
 		{
 			// Set the taxonomy label as default label for the admin column
@@ -193,20 +227,26 @@ class WG_Custom_Post_Type
 			$this->_admin_columns[ $id ] = $admin_column;
 		}
 
+		// Should the admin list for the post type be filterable by this taxonomy?
+		if ( $admin_filter )
+		{
+			$this->make_filterable_by( $id );
+		}
+
 		return $this;
 	}
 
 	/**
 	 * Adds a previously registered taxonomy to this post type
 	 * 
-	 * If the $filterable parameter is true, the admin screens for the post type
+	 * If the $admin_filter parameter is true, the admin list for the post type
 	 * will be filterable by the given taxonomy.
 	 * 
-	 * @param  string $taxonomy_id Slug of taxonomy to be added
-	 * @param  boolean $filterable 
+	 * @param  string $taxonomy_id   Slug of taxonomy to be added
+	 * @param  boolean $admin_filter Optional, default: false
 	 * @return $this for chaining
 	 */
-	public function add_existing_taxonomy( $taxonomy_id, $filterable = false )
+	public function add_existing_taxonomy( $taxonomy_id, $admin_filter = false )
 	{
 		$args = $this->post_type_args;
 
@@ -219,7 +259,7 @@ class WG_Custom_Post_Type
 		$args['taxonomies'][] = $taxonomy_id;
 		$this->post_type_args = $args;
 
-		if ( $filterable )
+		if ( $admin_filter )
 		{
 			$this->make_filterable_by( $taxonomy_id );
 		}
@@ -230,27 +270,27 @@ class WG_Custom_Post_Type
 	/**
 	 * Adds multiple previously registered taxonomies to this post type
 	 * 
-	 * If the $filterable parameter is true, the admin screens for the post type
+	 * If the $admin_filter parameter is true, the admin list for the post type
 	 * will be filterable by the given taxonomies.
 	 * 
 	 * @param  array   $taxonomy_ids Slugs of taxonomies to be added
-	 * @param  boolean $filterable 
+	 * @param  boolean $admin_filter Optional, default: false
 	 * @return $this   For chaining
 	 */
-	public function add_existing_taxonomies( $taxonomy_ids, $filterable = false )
+	public function add_existing_taxonomies( $taxonomy_ids, $admin_filter = false )
 	{
 		foreach ( $taxonomy_ids as $taxonomy_id )
 		{
-			$this->add_existing_taxonomy( $taxonomy_id, $filterable );
+			$this->add_existing_taxonomy( $taxonomy_id, $admin_filter );
 		}
 
 		return $this;
 	}
 
 	/**
-	 * Makes the admin screens for the post type filterable by the given taxonomies
+	 * Makes the admin list for the post type filterable by the given taxonomies
 	 * 
-	 * @param  array $taxonomies Slugs for the taxonomies to add ass filters
+	 * @param  array|string $taxonomies Slug(s) for the taxonomies to add as filters
 	 * @return $this For chaining
 	 */
 	public function make_filterable_by( $taxonomies )
@@ -260,46 +300,14 @@ class WG_Custom_Post_Type
 			$taxonomies = array( $taxonomies );
 		}
 
-		if ( count( $this->_filterable_by ) == 0 )
+		if ( count( $this->_admin_filters ) == 0 )
 		{
 			// Add actions for filtering
 			add_action( 'restrict_manage_posts', array( $this, '_cb_restrict_manage_posts' ) );
 			add_action( 'parse_query', array( $this, '_cb_parse_query' ) );
 		}
 
-		$this->_filterable_by = array_merge( $this->_filterable_by, $taxonomies );
-
-		return $this;
-	}
-
-	/**
-	 * Adds a new meta box for the CPT using WGMetaBox::add_meta_box()
-	 * https://github.com/Webbgaraget/wg-meta-box
-	 *
-	 * @param string $id Internal ID of the meta box
-	 * @param string $title The title displayed in the meta box header
-	 * @param array $fields Array of fields defined as described in WGMetaBox
-	 * @param string $context Optional context of the meta box. Default: 'advanced'
-	 * @param string $priority Optional priority of the meta box. Default: 'default'
-	 * @param array  $callback_args Optional array of callback arguments. See WGMetaBox documentation. Default: null
-	 *
-	 * @return $this For chaining
-	 */
-	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
-	{
-		if ( ! class_exists( 'WGMetaBox' ) )
-		{
-			if ( file_exists( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' ) )
-			{
-				require_once( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' );
-			}
-			else
-			{
-				throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
-			}
-		}
-
-		WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority, $callback_args );
+		$this->_admin_filters = array_merge( $this->_admin_filters, $taxonomies );
 
 		return $this;
 	}
@@ -582,7 +590,7 @@ class WG_Custom_Post_Type
 			return;
 		}
 		
-		foreach ( $this->_filterable_by as $taxonomy_id )
+		foreach ( $this->_admin_filters as $taxonomy_id )
 		{
 			$taxonomy = get_taxonomy( $taxonomy_id );
 			wp_dropdown_categories(
@@ -619,7 +627,7 @@ class WG_Custom_Post_Type
 
 		$query_vars = &$query->query_vars;
 
-		foreach ( $this->_filterable_by as $taxonomy_id )
+		foreach ( $this->_admin_filters as $taxonomy_id )
 		{
 			if ( isset( $_GET[ $taxonomy_id ] ) && $_GET[ $taxonomy_id ] !== '0' )
 			{
