@@ -330,7 +330,7 @@ class WG_Custom_Post_Type
 	{
 		if ( ! class_exists( 'MultiPostThumbnails' ) )
 		{
-			return;
+			return $this;
 		}
 
 		$thumb = new MultiPostThumbnails(
