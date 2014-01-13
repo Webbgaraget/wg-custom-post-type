@@ -717,14 +717,16 @@ class WG_Custom_Post_Type
 
 		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->_admin_columns ) )
 		{
-			$clauses['groupby']  = 'ID';
-			$clauses['orderby']  = 'GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ';
-			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get( 'order' ) ) ) ? 'ASC' : 'DESC';
-			$clauses['join']    .= <<<SQL
+			$clauses['join'] .= <<<SQL
 LEFT OUTER JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID={$wpdb->term_relationships}.object_id
-LEFT OUTER JOIN {$wpdb->term_taxonomy} ON ({$wpdb->term_relationships}.term_taxonomy_id={$wpdb->term_taxonomy}.term_taxonomy_id) AND (taxonomy = '{$wp_query->query['orderby']}' OR taxonomy IS NULL)
+LEFT OUTER JOIN {$wpdb->term_taxonomy} USING (term_taxonomy_id)
 LEFT OUTER JOIN {$wpdb->terms} USING (term_id)
 SQL;
+
+			$clauses['where']   .= "AND (taxonomy = '{$wp_query->query['orderby']}' OR taxonomy IS NULL)";
+			$clauses['groupby']  = 'object_id';
+			$clauses['orderby']  = "GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC)" ;
+			$clauses['orderby'] .= ( 'ASC' == strtoupper( $wp_query->get( 'order' ) ) ) ? 'ASC' : 'DESC';
 		}
 
 		return $clauses;
