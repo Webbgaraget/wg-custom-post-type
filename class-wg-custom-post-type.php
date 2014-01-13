@@ -102,19 +102,19 @@ class WG_Custom_Post_Type
 		// Reserved terms that WordPress wont let us use as custom post type ID.
 		// The list can be found here: http://codex.wordpress.org/Function_Reference/register_post_type#Reserved_Post_Types
 		$reserved = array( 'post', 'page', 'attachment', 'revision', 'nav_menu_item' );
-		
+
 		if ( in_array( $post_type, $reserved ) )
 		{
 			throw new Exception( __CLASS__ . ": \"{$post_type}\" is a reserved word and cannot be used as ID for a custom post type. More info in the <a href=\"http://codex.wordpress.org/Function_Reference/register_post_type#Reserved_Post_Types\">WordPress Codex</a>" );
 		}
-		
+
 		// According to the DB schema of WordPress, $post_type can't be longer than 20 characters
 		// http://codex.wordpress.org/Post_Types#Naming_Best_Practices
 		if ( strlen( $post_type ) > 20 )
 		{
 			throw new Exception( __CLASS__ . ": \"{$post_type}\" (length: " . strlen( $post_type ) . ') is longer than the allowed 20 characters. More info in the <a href=\"http://codex.wordpress.org/Post_Types#Naming_Best_Practices\">WordPress Codex</a>' );
 		}
-		
+
 		if ( is_array( $args ) && 'require_labels' == $label_check )
 		{
 			// Check if all the required labels are set in the arguments
@@ -179,25 +179,25 @@ class WG_Custom_Post_Type
 		// Reserved terms that WordPress wont let us use as taxonomy ID.
 		// The list can be found here: http://codex.wordpress.org/Function_Reference/register_taxonomy#Reserved_Terms
 		$reserved = array( 'attachment', 'attachment_id', 'author', 'author_name', 'calendar', 'cat', 'category', 'category__and', 'category__in', 'category__not_in', 'category_name', 'comments_per_page', 'comments_popup', 'cpage', 'day', 'debug', 'error', 'exact', 'feed', 'hour', 'link_category', 'm', 'minute', 'monthnum', 'more', 'name', 'nav_menu', 'nopaging', 'offset', 'order', 'orderby', 'p', 'page', 'page_id', 'paged', 'pagename', 'pb', 'perm', 'post', 'post__in', 'post__not_in', 'post_format', 'post_mime_type', 'post_status', 'post_tag', 'post_type', 'posts', 'posts_per_archive_page', 'posts_per_page', 'preview', 'robots', 's', 'search', 'second', 'sentence', 'showposts', 'static', 'subpost', 'subpost_id', 'tag', 'tag__and', 'tag__in', 'tag__not_in', 'tag_id', 'tag_slug__and', 'tag_slug__in', 'taxonomy', 'tb', 'term', 'type', 'w', 'withcomments', 'withoutcomments', 'year' );
-		
+
 		if ( in_array( $id, $reserved ) )
 		{
 			throw new Exception( __CLASS__ . ": add_taxonomy() failed, \"{$id}\" is a reserved term and cannot be used as taxonomy ID. More information in the <a href=\"http://codex.wordpress.org/Function_Reference/register_taxonomy#Reserved_Terms\">WordPress Codex</a>." );
 		}
-		
-		
+
+
 		// Save taxonomy for later when the init callback is called
 		$this->_taxonomies[] = array(
 			'slug'         => $id,
 			'args'         => $args,
 		);
-		
+
 		// Should we add an admin column?
 		if ( is_array( $admin_column ) || true === $admin_column )
 		{
 			// Set the taxonomy label as default label for the admin column
 			$taxonomy_label = ( isset( $args['label'] ) ? $args['label'] : $args['labels']['name'] );
-			
+
 			// Display the admin column after the post title
 			// and make it sortable by default
 			$default_admin_column = array(
@@ -205,7 +205,7 @@ class WG_Custom_Post_Type
 				'label'         => $taxonomy_label,
 				'sortable'      => true,
 			);
-			
+
 			if ( true === $admin_column )
 			{
 				// Use the default values
@@ -215,7 +215,7 @@ class WG_Custom_Post_Type
 			{
 				$admin_column = array_merge( $default_admin_column, $admin_column );
 			}
-			
+
 			if ( count( $this->_admin_columns ) == 0 )
 			{
 				// Add columns to the admin screen
@@ -224,7 +224,7 @@ class WG_Custom_Post_Type
 				add_action( "manage_{$this->post_type}_posts_custom_column", array( &$this, '_cb_display_column_values' ), 10, 2 );
 				add_filter( 'posts_clauses', array( &$this, '_cb_orderby_column' ), 10, 2 );
 			}
-			
+
 			$this->_admin_columns[ $id ] = $admin_column;
 		}
 
@@ -239,10 +239,10 @@ class WG_Custom_Post_Type
 
 	/**
 	 * Adds a previously registered taxonomy to this post type
-	 * 
+	 *
 	 * If the $admin_filter parameter is true, the admin list for the post type
 	 * will be filterable by the given taxonomy.
-	 * 
+	 *
 	 * @param  string $taxonomy_id   Slug of taxonomy to be added
 	 * @param  boolean $admin_filter Optional, default: false
 	 * @return $this for chaining
@@ -251,7 +251,7 @@ class WG_Custom_Post_Type
 	{
 		$args = $this->post_type_args;
 
-		if ( ! isset( $args['taxonomies'] ) ) 
+		if ( ! isset( $args['taxonomies'] ) )
 		{
 			// No taxonomies have been added yet, create the argument
 			$args['taxonomies'] = array();
@@ -270,10 +270,10 @@ class WG_Custom_Post_Type
 
 	/**
 	 * Adds multiple previously registered taxonomies to this post type
-	 * 
+	 *
 	 * If the $admin_filter parameter is true, the admin list for the post type
 	 * will be filterable by the given taxonomies.
-	 * 
+	 *
 	 * @param  array   $taxonomy_ids Slugs of taxonomies to be added
 	 * @param  boolean $admin_filter Optional, default: false
 	 * @return $this   For chaining
@@ -290,7 +290,7 @@ class WG_Custom_Post_Type
 
 	/**
 	 * Makes the admin list for the post type filterable by the given taxonomies
-	 * 
+	 *
 	 * @param  array|string $taxonomies Slug(s) for the taxonomies to add as filters
 	 * @return $this For chaining
 	 */
@@ -576,7 +576,7 @@ class WG_Custom_Post_Type
 	/**
 	 * Adds dropdowns for filtering the admin list, based on the
 	 * taxonomies that have been added to this post type as filters.
-	 * 
+	 *
 	 * @wp-hook restrict_manage_posts
 	 * @see     make_filterable_by()
 	 * @return  void
@@ -590,7 +590,7 @@ class WG_Custom_Post_Type
 			// We only want to do this in the admin screen for this post type
 			return;
 		}
-		
+
 		foreach ( $this->_admin_filters as $taxonomy_id )
 		{
 			$taxonomy = get_taxonomy( $taxonomy_id );
@@ -611,7 +611,7 @@ class WG_Custom_Post_Type
 
 	/**
 	 * Modifies the posts query to make the taxonomy filters work (see above and make_filterable_by())
-	 * 
+	 *
 	 * @wp-hook parse_query
 	 * @param   WP_Query $query
 	 * @return  WP_Query $query with potentially modified query_vars
@@ -645,10 +645,10 @@ class WG_Custom_Post_Type
 
 		return $query;
 	}
-	
+
 	/**
 	 * Adds columns to the admin screen for this post type
-	 * 
+	 *
 	 * @wp-hook manage_{$this->post_type}_posts_columns
 	 * @param   array $post_columns
 	 * @return  array
@@ -661,12 +661,12 @@ class WG_Custom_Post_Type
 			$new_columns = array_slice( $post_columns, 0, $index );
 			$new_columns[ $taxonomy_id ] = $admin_column['label'];
 			$new_columns = array_merge( $new_columns, array_slice( $post_columns, $index ) );
-			
+
 			$post_columns = $new_columns;
 		}
 		return $post_columns;
 	}
-	
+
 	public function _cb_sortable_columns( $columns )
 	{
 		foreach ( $this->_admin_columns as $taxonomy_id => $admin_column )
@@ -676,10 +676,10 @@ class WG_Custom_Post_Type
 				$columns[ $taxonomy_id ] = $taxonomy_id;
 			}
 		}
-		
+
 		return $columns;
 	}
-	
+
 	/**
 	 * Outputs the value for the columns we have added to the admin screen
 	 * Action: manage_{$this->post_type}_custom_column
@@ -697,7 +697,7 @@ class WG_Custom_Post_Type
 			}
 		}
 	}
-	
+
 	/**
 	 * Sorting on taxonomy admin columns.
 	 *
@@ -706,16 +706,16 @@ class WG_Custom_Post_Type
 	 * http://wordpress.stackexchange.com/questions/8811/sortable-admin-columns-when-data-isnt-coming-from-post-meta#comment70352_11256
 	 *
 	 * Action: posts_clauses
-	 * 
-	 * @param array $clauses 
-	 * @param WP_Query $wp_query 
+	 *
+	 * @param array $clauses
+	 * @param WP_Query $wp_query
 	 * @return array
 	 */
 	public function _cb_orderby_column( $clauses, $wp_query )
 	{
 		global $wpdb;
 
-		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->_admin_columns ) ) 
+		if ( isset( $wp_query->query['orderby'] ) && array_key_exists( $wp_query->query['orderby'], $this->_admin_columns ) )
 		{
 			$clauses['groupby']  = 'ID';
 			$clauses['orderby']  = 'GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC) ';
