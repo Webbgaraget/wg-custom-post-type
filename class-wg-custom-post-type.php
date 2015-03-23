@@ -32,6 +32,12 @@ class WG_Custom_Post_Type
 	protected $_taxonomies = array();
 
 	/**
+	 * Meta boxes associated to this CPT
+	 * @var array
+	 */
+	protected $_meta_boxes = array();
+
+	/**
 	 * Admin columns for taxonomies
 	 * @var array
 	 */
@@ -163,7 +169,7 @@ class WG_Custom_Post_Type
 			'priority'     => $priority,
 		);
 
-		$this->meta_boxes[] = array_merge( $options, $meta_fields );
+		$this->_meta_boxes[] = array_merge( $options, $meta_fields );
 
 		return $this;
 	}
@@ -173,7 +179,7 @@ class WG_Custom_Post_Type
 	 */
 	public function _register_meta_boxes( $meta_boxes )
 	{
-		return array_merge( $this->meta_boxes, $meta_boxes );
+		return array_merge( $this->_meta_boxes, $meta_boxes );
 	}
 
 	/**
