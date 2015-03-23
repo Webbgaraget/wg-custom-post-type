@@ -8,7 +8,6 @@
  *
  * @author  Webbgaraget
  * @link    http://www.webbgaraget.se
- * @uses    wg-meta-box (http://webbgaraget.github.com/wg-meta-box/)
  * @version 0.5
  */
 class WG_Custom_Post_Type
@@ -134,35 +133,11 @@ class WG_Custom_Post_Type
 	}
 
 	/**
-	 * Adds a new meta box for the CPT using WGMetaBox::add_meta_box()
-	 * https://github.com/Webbgaraget/wg-meta-box
-	 *
-	 * @param string $id Internal ID of the meta box
-	 * @param string $title The title displayed in the meta box header
-	 * @param array  $fields Array of fields defined as described in WGMetaBox
-	 * @param string $context Optional context of the meta box. Default: 'advanced'
-	 * @param string $priority Optional priority of the meta box. Default: 'default'
-	 * @param array  $callback_args Optional array of callback arguments. See WGMetaBox documentation. Default: null
-	 *
-	 * @return $this For chaining
+	 * Throw exception if called
 	 */
 	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
 	{
-		if ( ! class_exists( 'WGMetaBox' ) )
-		{
-			if ( file_exists( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' ) )
-			{
-				require_once( dirname( __FILE__ ) . '/lib/wg-meta-box/wg-meta-box.php' );
-			}
-			else
-			{
-				throw new Exception( __CLASS__ . ' requires the lib wg-meta-box (http://webbgaraget.github.com/wg-meta-box/) for meta boxes' );
-			}
-		}
-
-		WGMetaBox::add_meta_box( $id, $title, $fields, $this->post_type, $context, $priority, $callback_args );
-
-		return $this;
+		throw new Exception( 'Use the CMB2 library to add meta fields!' );
 	}
 
 	/**
