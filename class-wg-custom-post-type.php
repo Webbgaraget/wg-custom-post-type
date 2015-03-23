@@ -143,18 +143,18 @@ class WG_Custom_Post_Type
 	 * @param array  $fields Array of fields defined as described in WGMetaBox
 	 * @param string $context Optional context of the meta box. Default: 'advanced'
 	 * @param string $priority Optional priority of the meta box. Default: 'default'
-	 * @param array  $callback_args Optional array of callback arguments. See WGMetaBox documentation. Default: null (unimplemented)
+	 * @param array  $options Extra options passed to CMB2 when registering the meta fields
 	 *
 	 * @return $this For chaining
 	 */
-	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
+	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $options = array() )
 	{
-		if ( ! class_exists('CMB2') )
+		if ( ! class_exists( 'CMB2' ) )
 		{
 			throw new Exception( 'This function requires the CMB2 library: https://github.com/WebDevStudios/CMB2' );
 		}
 
-		$this->meta_boxes[] = array(
+		$meta_fields = array(
 			'id'           => $id,
 			'title'        => $title,
 			'object_types' => $this->post_type,
@@ -163,15 +163,17 @@ class WG_Custom_Post_Type
 			'priority'     => $priority,
 		);
 
+		$this->meta_boxes[] = array_merge( $options, $meta_fields );
+
 		return $this;
 	}
 
 	/**
 	 * Return meta boxes for CMB2
 	 */
-	public function _register_meta_boxes()
+	public function _register_meta_boxes( $meta_boxes )
 	{
-		return $this->meta_boxes;
+		return array_merge( $this->meta_boxes, $meta_boxes );
 	}
 
 	/**
