@@ -8,6 +8,7 @@
  *
  * @author  Webbgaraget
  * @link    http://www.webbgaraget.se
+ * @uses    CMB2 (https://github.com/WebDevStudios/CMB2)
  * @version 0.5
  */
 class WG_Custom_Post_Type
@@ -129,15 +130,48 @@ class WG_Custom_Post_Type
 		$this->post_type	  = $post_type;
 		$this->post_type_args = $args;
 
+		add_filter( 'cmb2_meta_boxes', array( &$this, '_register_meta_boxes' ) );
 		add_action( 'init', array( &$this, '_cb_init' ) );
 	}
 
 	/**
-	 * Throw exception if called
+	 * Adds a new meta box for the CPT using CMB2
+	 * https://github.com/WebDevStudios/CMB2
+	 *
+	 * @param string $id Internal ID of the meta box
+	 * @param string $title The title displayed in the meta box header
+	 * @param array  $fields Array of fields defined as described in WGMetaBox
+	 * @param string $context Optional context of the meta box. Default: 'advanced'
+	 * @param string $priority Optional priority of the meta box. Default: 'default'
+	 * @param array  $callback_args Optional array of callback arguments. See WGMetaBox documentation. Default: null (unimplemented)
+	 *
+	 * @return $this For chaining
 	 */
 	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $callback_args = null )
 	{
-		throw new Exception( 'Use the CMB2 library to add meta fields!' );
+		if ( ! class_exists('CMB2') )
+		{
+			throw new Exception( 'This function requires the CMB2 library: https://github.com/WebDevStudios/CMB2' );
+		}
+
+		$this->meta_boxes[] = array(
+			'id'           => $id,
+			'title'        => $title,
+			'object_types' => $this->post_type,
+			'fields'       => $fields,
+			'context'      => $context,
+			'priority'     => $priority,
+		);
+
+		return $this;
+	}
+
+	/**
+	 * Return meta boxes for CMB2
+	 */
+	public function _register_meta_boxes()
+	{
+		return $this->meta_boxes;
 	}
 
 	/**
