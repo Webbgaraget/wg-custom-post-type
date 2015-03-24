@@ -160,6 +160,11 @@ class WG_Custom_Post_Type
 			throw new Exception( 'This function requires the CMB2 library: https://github.com/WebDevStudios/CMB2' );
 		}
 
+		foreach ( $fields as &$field )
+		{
+			$field['id'] = "{$id}-{$field['id']}";
+		}
+
 		$meta_fields = array(
 			'id'           => $id,
 			'title'        => $title,
