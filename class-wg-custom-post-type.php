@@ -155,7 +155,7 @@ class WG_Custom_Post_Type
 	 */
 	public function add_meta_box( $id, $title, $fields, $context = 'advanced', $priority = 'default', $options = array() )
 	{
-		if ( ! class_exists( 'CMB2' ) )
+		if ( ! defined( 'CMB2_LOADED' ) )
 		{
 			throw new Exception( 'This function requires the CMB2 library: https://github.com/WebDevStudios/CMB2' );
 		}
