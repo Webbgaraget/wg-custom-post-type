@@ -163,7 +163,7 @@ class WG_Custom_Post_Type
 		$meta_fields = array(
 			'id'           => $id,
 			'title'        => $title,
-			'object_types' => $this->post_type,
+			'object_types' => array( $this->post_type ),
 			'fields'       => $fields,
 			'context'      => $context,
 			'priority'     => $priority,
